@@ -1,0 +1,29 @@
+
+version: "3.9"
+
+services:
+  web:
+    build: 
+      context: .
+      dockerfile: web/Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - api
+
+  api:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./server:/code
+    environment:
+      - DATABASE_URL=sqlite:///./synvya.db
+      - CORS_ORIGINS=["http://localhost:5173"]

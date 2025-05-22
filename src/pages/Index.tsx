@@ -1,13 +1,33 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { Routes, Route, Navigate } from "react-router-dom";
+import { NostrAuthProvider } from "@/contexts/NostrAuthContext";
+import SignInPage from "./SignInPage";
+import SignUpPage from "./SignUpPage";
+import FormPage from "./FormPage";
+import VisualizationPage from "./VisualizationPage";
+import AuthGuard from "@/components/AuthGuard";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <NostrAuthProvider>
+      <div className="min-h-screen bg-[#F6F6F9]">
+        <Routes>
+          <Route path="/" element={<Navigate to="/signin" replace />} />
+          <Route path="/signin" element={<SignInPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/form" element={
+            <AuthGuard>
+              <FormPage />
+            </AuthGuard>
+          } />
+          <Route path="/visualization" element={
+            <AuthGuard>
+              <VisualizationPage />
+            </AuthGuard>
+          } />
+        </Routes>
       </div>
-    </div>
+    </NostrAuthProvider>
   );
 };
 
