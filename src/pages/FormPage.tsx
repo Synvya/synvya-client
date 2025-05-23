@@ -61,7 +61,7 @@ const FormPage: React.FC = () => {
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h1 className="text-3xl font-bold text-[#01013C] text-center mb-8">
-            Merchant Profile
+            Business Profile
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
