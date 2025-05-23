@@ -60,7 +60,7 @@ const SignUpPage: React.FC = () => {
             <div className="space-y-4 text-left">
               <Checkbox
                 id="extension"
-                label="I will install a Nostr browser extension."
+                label="I have installed a Nostr browser extension."
                 checked={extensionAgreed}
                 onChange={setExtensionAgreed}
               />
