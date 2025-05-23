@@ -5,11 +5,18 @@ import NavHeader from '@/components/NavHeader';
 import PrimaryButton from '@/components/PrimaryButton';
 import SecondaryButton from '@/components/SecondaryButton';
 import FilePicker from '@/components/FilePicker';
+import CountrySelect from '@/components/CountrySelect';
+import StateSelect from '@/components/StateSelect';
 
 interface FormData {
   name: string;
   displayName: string;
   about: string;
+  street: string;
+  city: string;
+  zipCode: string;
+  state: string;
+  country: string;
   profilePicture: File | null;
   bannerPicture: File | null;
   website: string;
@@ -23,6 +30,11 @@ const FormPage: React.FC = () => {
     name: '',
     displayName: '',
     about: '',
+    street: '',
+    city: '',
+    zipCode: '',
+    state: '',
+    country: '',
     profilePicture: null,
     bannerPicture: null,
     website: '',
@@ -102,6 +114,83 @@ const FormPage: React.FC = () => {
                 rows={4}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors resize-none"
               />
+            </div>
+            
+            {/* Address Fields */}
+            <div>
+              <label className="block text-sm font-medium text-[#01013C] mb-2">
+                Street Address
+              </label>
+              <input
+                type="text"
+                value={formData.street}
+                onChange={(e) => handleInputChange('street', e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-[#01013C] mb-2">
+                  City
+                </label>
+                <input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-[#01013C] mb-2">
+                  Zip Code
+                </label>
+                <input
+                  type="text"
+                  value={formData.zipCode}
+                  onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-[#01013C] mb-2">
+                  Country
+                </label>
+                <CountrySelect
+                  value={formData.country}
+                  onChange={(value) => {
+                    handleInputChange('country', value);
+                    // Reset state if country changes from US
+                    if (value !== 'US') {
+                      handleInputChange('state', '');
+                    }
+                  }}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-[#01013C] mb-2">
+                  State / Province
+                </label>
+                {formData.country === 'US' ? (
+                  <StateSelect
+                    value={formData.state}
+                    onChange={(value) => handleInputChange('state', value)}
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={formData.state}
+                    onChange={(e) => handleInputChange('state', e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+                    placeholder="State/Province/Region"
+                  />
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
