@@ -7,7 +7,7 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ className = "" }) => {
   return (
-    <div className={`text-[#01013C] font-bold text-2xl ${className}`}>
+    <div className={`text-[#49BB5B] font-bold text-2xl ${className}`}>
       Synvya
     </div>
   );

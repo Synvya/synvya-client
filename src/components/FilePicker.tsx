@@ -24,7 +24,7 @@ const FilePicker: React.FC<FilePickerProps> = ({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <label className="block text-sm font-medium text-[#01013C]">
+      <label className="block text-sm font-medium text-[#49BB5B]">
         {label}
       </label>
       <div className="relative">
@@ -34,7 +34,7 @@ const FilePicker: React.FC<FilePickerProps> = ({
           onChange={handleFileChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
-        <div className="flex items-center space-x-3 px-4 py-3 border-2 border-gray-300 rounded-xl bg-white hover:border-[#9F7AEA] transition-colors duration-200">
+        <div className="flex items-center space-x-3 px-4 py-3 border-2 border-gray-300 rounded-xl bg-white hover:border-[#49BB5B] transition-colors duration-200">
           <FileUp className="w-5 h-5 text-gray-500" />
           <span className="text-gray-600">{placeholder}</span>
         </div>

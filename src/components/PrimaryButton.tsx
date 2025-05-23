@@ -22,7 +22,7 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       onClick={onClick}
       disabled={disabled}
       className={`
-        bg-[#01013C] text-white px-8 py-3 rounded-xl font-medium
+        bg-[#49BB5B] text-white px-8 py-3 rounded-xl font-medium
         shadow-md hover:shadow-lg transform hover:scale-[1.02] 
         transition-all duration-200 disabled:opacity-50 
         disabled:cursor-not-allowed disabled:transform-none
