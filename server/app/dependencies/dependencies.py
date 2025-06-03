@@ -2,18 +2,15 @@
 This module contains the dependencies for the API endpoints.
 """
 
-import hashlib
-import json
 import time
-from typing import Optional
 
 from fastapi import Header, HTTPException, Request
 
 
 def get_current_user(
-    x_nostr_pubkey: Optional[str] = Header(None, alias="X-Nostr-Pubkey"),
-    x_nostr_signature: Optional[str] = Header(None, alias="X-Nostr-Signature"),
-    x_nostr_timestamp: Optional[str] = Header(None, alias="X-Nostr-Timestamp"),
+    x_nostr_pubkey: str | None = Header(None, alias="X-Nostr-Pubkey"),
+    x_nostr_signature: str | None = Header(None, alias="X-Nostr-Signature"),
+    x_nostr_timestamp: str | None = Header(None, alias="X-Nostr-Timestamp"),
 ) -> str:
     """
     Get the current authenticated user's public key with signature verification.
@@ -59,21 +56,6 @@ def get_current_user(
                 detail="Request timestamp too old or too far in future.",
             )
 
-        # Create the event that should have been signed
-        message = f"nostr-auth:{timestamp}"
-        auth_event = [
-            0,  # version
-            x_nostr_pubkey,  # pubkey
-            timestamp,  # created_at
-            22242,  # kind
-            [],  # tags
-            message,  # content
-        ]
-
-        # Create the event hash as per Nostr spec
-        event_json = json.dumps(auth_event, separators=(",", ":"), ensure_ascii=False)
-        event_hash = hashlib.sha256(event_json.encode("utf-8")).hexdigest()
-
         # For now, we'll do basic validation without Schnorr verification
         # The signature format should be a 64-byte hex string (128 characters)
         if not x_nostr_signature or len(x_nostr_signature) != 128:
@@ -93,7 +75,7 @@ def get_current_user(
 
         # Basic validation passed - the user provided a properly formatted signature
         # and recent timestamp. For production, you'd want proper Schnorr verification here.
-        is_valid = True
+        # TODO: Implement proper Nostr event signature verification
 
         return x_nostr_pubkey
 

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 
 interface NostrAuthState {
@@ -9,7 +8,7 @@ interface NostrAuthState {
   hasNostrExtension: boolean;
 }
 
-type NostrAuthAction = 
+type NostrAuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_AUTHENTICATED'; payload: { publicKey: string } }
   | { type: 'SET_ERROR'; payload: string }
@@ -29,12 +28,12 @@ const nostrAuthReducer = (state: NostrAuthState, action: NostrAuthAction): Nostr
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload, error: null };
     case 'SET_AUTHENTICATED':
-      return { 
-        ...state, 
-        isAuthenticated: true, 
+      return {
+        ...state,
+        isAuthenticated: true,
         publicKey: action.payload.publicKey,
         isLoading: false,
-        error: null 
+        error: null
       };
     case 'SET_ERROR':
       return { ...state, error: action.payload, isLoading: false };
@@ -79,10 +78,10 @@ export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         throw new Error('Nostr browser extension not found. Please install nos2x, Alby, or another NIP-07 compatible extension.');
       }
 
-      // @ts-ignore - window.nostr is added by browser extension
+      // @ts-expect-error - window.nostr is added by browser extension
       const publicKey = await window.nostr.getPublicKey();
       console.log('Got public key:', publicKey);
-      
+
       dispatch({ type: 'SET_AUTHENTICATED', payload: { publicKey } });
     } catch (error) {
       console.error('Sign in error:', error);

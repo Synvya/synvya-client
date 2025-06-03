@@ -1,4 +1,3 @@
-
 # Synvya Retail Client
 
 A modern merchant platform that leverages Nostr for decentralized authentication and storefront creation. Built with React, TypeScript, and Tailwind CSS.
@@ -31,6 +30,31 @@ npm run dev
 ```
 
 Visit http://localhost:5173 to view the application.
+
+## Environment Setup
+
+This application uses environment variables for configuration. Before running the application, you'll need to set up your environment files:
+
+### Frontend Configuration
+Copy the example file and configure as needed:
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your actual values:
+- `DATABASE_URL`: Your PostgreSQL connection string
+- `VITE_API_URL`: Backend API URL (optional, defaults to http://localhost:8000)
+
+### Backend Configuration
+Copy the backend example file:
+```bash
+cp server/app/.env.example server/app/.env
+```
+
+Edit `server/app/.env` with:
+- `BACKEND_PRIVATE_KEY`: Your Nostr private key in nsec format (generate with a Nostr client)
+
+**⚠️ Security Note**: Never commit `.env` files to version control. They are included in `.gitignore` to prevent accidental exposure of sensitive data.
 
 ### Docker Development
 ```bash

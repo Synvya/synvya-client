@@ -4,17 +4,19 @@ Main entry point for the Synvya Retail API.
 
 import os
 from contextlib import asynccontextmanager
+from datetime import UTC
 from pathlib import Path
 
 import sqlalchemy as sa
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from synvya_sdk import KeyEncoding, NostrClient, NostrKeys, generate_keys
+
 from app.api import delegations, products, profile
 from app.db import delegations as deleg_repo
 from app.db.session import async_session
 from app.dependencies import get_public_key
-from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from synvya_sdk import KeyEncoding, NostrClient, NostrKeys, generate_keys
 
 DEFAULT_RELAYS = ["wss://relay.primal.net"]
 
@@ -81,12 +83,12 @@ async def lifespan(app: FastAPI):
                 for merchant_pubkey, delegation_json in delegations_data:
                     try:
                         # Parse delegation to check expiration
-                        from datetime import datetime, timezone
+                        from datetime import datetime
 
                         from synvya_sdk.models import Delegation
 
                         delegation = Delegation.parse(delegation_json)
-                        current_timestamp = int(datetime.now(timezone.utc).timestamp())
+                        current_timestamp = int(datetime.now(UTC).timestamp())
 
                         if current_timestamp <= delegation.expires_at:
                             # Delegation is still valid - add it to client
@@ -98,7 +100,7 @@ async def lifespan(app: FastAPI):
                         else:
                             # Delegation has expired
                             expires_date = datetime.fromtimestamp(
-                                delegation.expires_at, tz=timezone.utc
+                                delegation.expires_at, tz=UTC
                             )
                             print(
                                 f"Skipping expired delegation for merchant {merchant_pubkey} (expired: {expires_date})"

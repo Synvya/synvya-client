@@ -1,6 +1,6 @@
-from typing import List, Literal, Union
+from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class SignedEvent(BaseModel):
@@ -19,9 +19,9 @@ class SignedEvent(BaseModel):
     """
 
     id: str
-    kind: Union[Literal[22242], Literal[30078]]  # Auth events and delegation events
+    kind: Literal[22242] | Literal[30078]  # Auth events and delegation events
     pubkey: str
     created_at: int
-    tags: List[List[str]]
+    tags: list[list[str]]
     sig: str
     content: str

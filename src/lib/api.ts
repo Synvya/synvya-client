@@ -4,9 +4,19 @@ interface NostrHeaders {
     'X-Nostr-Timestamp': string;
 }
 
+interface NostrEvent {
+    id?: string;
+    kind: number;
+    created_at: number;
+    content: string;
+    tags: string[][];
+    pubkey: string;
+    sig?: string;
+}
+
 interface ApiRequestOptions {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-    body?: any;
+    body?: Record<string, unknown>;
     headers?: Record<string, string>;
 }
 
@@ -17,7 +27,7 @@ class ApiClient {
         this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     }
 
-    private async generateEventId(event: any): Promise<string> {
+    private async generateEventId(event: NostrEvent): Promise<string> {
         // Create the event array as per Nostr spec for ID generation
         const eventArray = [
             0, // version
@@ -49,7 +59,7 @@ class ApiClient {
 
         try {
             // Create a simple event for authentication instead of using signMessage
-            const authEvent: any = {
+            const authEvent: NostrEvent = {
                 kind: 22242, // Nostr auth event kind
                 created_at: timestamp,
                 content: message,

@@ -2,12 +2,12 @@
 Profile API endpoints.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
-from app.db import delegations as deleg_repo
-from app.dependencies import get_current_user, get_nostr_client
 from fastapi import APIRouter, Depends, HTTPException
-from synvya_sdk import NostrClient, NostrKeys, Profile
+from synvya_sdk import Profile
+
+from app.dependencies import get_current_user, get_nostr_client
 
 router = APIRouter()
 
@@ -17,7 +17,7 @@ RELAYS = ["wss://relay.primal.net"]
 @router.get("/{public_key}")
 async def get_profile(
     public_key: str, nostr_client=Depends(get_nostr_client)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get merchant profile by public key.
 
@@ -53,10 +53,10 @@ async def get_profile(
 
 @router.post("/")
 async def create_or_update_profile(
-    profile_data: Dict[str, Any],
+    profile_data: dict[str, Any],
     user_pubkey: str = Depends(get_current_user),
     nostr_client=Depends(get_nostr_client),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Create or update merchant profile.
 
@@ -148,7 +148,7 @@ async def create_or_update_profile(
 
 
 @router.post("/upload-image")
-async def upload_image(image_type: str, file_data: bytes) -> Dict[str, str]:
+async def upload_image(image_type: str, file_data: bytes) -> dict[str, str]:
     """
     Upload profile or banner image.
 

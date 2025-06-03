@@ -2,11 +2,12 @@
 This module contains the API endpoints for the delegations.
 """
 
+from fastapi import APIRouter, Depends, HTTPException, status
+from synvya_sdk.models import Delegation
+
 from app.db import delegations as deleg_repo
 from app.dependencies import get_current_user, get_nostr_client, get_public_key
 from app.schemas.signed_event import SignedEvent
-from fastapi import APIRouter, Depends, HTTPException, status
-from synvya_sdk.models import Delegation
 
 router = APIRouter(prefix="/api/delegations", tags=["delegations"])
 

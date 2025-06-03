@@ -93,7 +93,7 @@ class DelegationManager {
         userPublicKey: string,
         delegateePubkey: string,
         durationDays: number = 30
-    ): Promise<{ success: boolean; error?: string; data?: any }> {
+    ): Promise<{ success: boolean; error?: string; data?: Record<string, unknown> }> {
         try {
             if (!window.nostr) {
                 throw new Error('Nostr extension not available');

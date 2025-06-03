@@ -2,15 +2,15 @@
 Products API endpoints.
 """
 
-from typing import Any, Dict, List
+from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 router = APIRouter()
 
 
 @router.get("/")
-async def get_products() -> List[Dict[str, Any]]:
+async def get_products() -> list[dict[str, Any]]:
     """
     Get all products for the authenticated merchant.
 
@@ -23,7 +23,7 @@ async def get_products() -> List[Dict[str, Any]]:
 
 
 @router.post("/")
-async def create_product(product_data: Dict[str, Any]) -> Dict[str, Any]:
+async def create_product(product_data: dict[str, Any]) -> dict[str, Any]:
     """
     Create a new product.
 
@@ -38,8 +38,8 @@ async def create_product(product_data: Dict[str, Any]) -> Dict[str, Any]:
 
 @router.post("/bulk-import")
 async def bulk_import_products(
-    source: str, data: List[Dict[str, Any]]
-) -> Dict[str, Any]:
+    source: str, data: list[dict[str, Any]]
+) -> dict[str, Any]:
     """
     Bulk import products from external platforms.
 
@@ -59,7 +59,7 @@ async def bulk_import_products(
 
 
 @router.post("/upload-csv")
-async def upload_csv(file_data: bytes) -> Dict[str, Any]:
+async def upload_csv(file_data: bytes) -> dict[str, Any]:
     """
     Upload and process CSV file for product import.
 

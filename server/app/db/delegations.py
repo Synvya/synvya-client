@@ -6,9 +6,10 @@ from datetime import datetime
 from typing import Any
 
 import sqlalchemy as sa
-from app.db.session import async_session
 from sqlalchemy.dialects.postgresql import JSONB, insert
 from synvya_sdk.models import Delegation
+
+from app.db.session import async_session
 
 delegations = sa.Table(
     "delegations",
