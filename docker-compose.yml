@@ -1,9 +1,8 @@
-
 version: "3.9"
 
 services:
   web:
-    build: 
+    build:
       context: .
       dockerfile: web/Dockerfile
     ports:
@@ -17,13 +16,30 @@ services:
       - api
 
   api:
-    build: 
+    build:
       context: ./server
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
       - ./server:/code
+    depends_on:
+      - db
     environment:
-      - DATABASE_URL=sqlite:///./synvya.db
+      - DATABASE_URL=postgresql+asyncpg://synvya:secret@db:5432/synvya
       - CORS_ORIGINS=["http://localhost:5173"]
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: synvya
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: synvya
+    ports:
+      - "5432:5432" # expose to host for local psql access
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

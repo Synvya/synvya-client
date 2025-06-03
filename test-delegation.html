@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delegation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .button {
+            background: #9F7AEA;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f5f5f5;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+        }
+
+        .success {
+            background: #efe;
+            color: #363;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Nostr Delegation Test</h1>
+
+    <div>
+        <h2>Prerequisites:</h2>
+        <ul>
+            <li>✅ Install a Nostr browser extension (Alby, nos2x, etc.)</li>
+            <li>✅ Backend running on localhost:8000</li>
+            <li>✅ Have some test Nostr credentials in your extension</li>
+        </ul>
+    </div>
+
+    <div>
+        <h2>Step 1: Check Nostr Extension</h2>
+        <button class="button" onclick="checkNostrExtension()">Check Extension</button>
+        <div id="extensionResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div>
+        <h2>Step 2: Get Public Key</h2>
+        <button class="button" onclick="getPublicKey()" id="getPubkeyBtn" disabled>Get Public Key</button>
+        <div id="pubkeyResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div>
+        <h2>Step 3: Get Backend Server Public Key</h2>
+        <button class="button" onclick="getBackendPubkey()" id="getBackendBtn" disabled>Get Backend Pubkey</button>
+        <div id="backendResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div>
+        <h2>Step 4: Create & Submit Delegation</h2>
+        <button class="button" onclick="createDelegation()" id="delegationBtn" disabled>Create Delegation</button>
+        <div id="delegationResult" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        let userPubkey = '';
+        let backendPubkey = '';
+
+        async function checkNostrExtension() {
+            const result = document.getElementById('extensionResult');
+            result.style.display = 'block';
+
+            if (typeof window.nostr !== 'undefined') {
+                result.className = 'result success';
+                result.innerHTML = '✅ Nostr extension detected!';
+                document.getElementById('getPubkeyBtn').disabled = false;
+            } else {
+                result.className = 'result error';
+                result.innerHTML = '❌ Nostr extension not found. Please install Alby, nos2x, or another NIP-07 compatible extension.';
+            }
+        }
+
+        async function getPublicKey() {
+            const result = document.getElementById('pubkeyResult');
+            result.style.display = 'block';
+
+            try {
+                userPubkey = await window.nostr.getPublicKey();
+                result.className = 'result success';
+                result.innerHTML = `✅ Public Key: ${userPubkey}`;
+                document.getElementById('getBackendBtn').disabled = false;
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `❌ Error getting public key: ${error.message}`;
+            }
+        }
+
+        async function getBackendPubkey() {
+            const result = document.getElementById('backendResult');
+            result.style.display = 'block';
+
+            try {
+                // Create authentication headers
+                const timestamp = Math.floor(Date.now() / 1000);
+                const message = `nostr-auth:${timestamp}`;
+                const signature = await window.nostr.signMessage(message);
+
+                const response = await fetch('http://localhost:8000/api/public_key', {
+                    headers: {
+                        'X-Nostr-Pubkey': userPubkey,
+                        'X-Nostr-Signature': signature,
+                        'X-Nostr-Timestamp': timestamp.toString(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+
+                const data = await response.json();
+                backendPubkey = data.public_key; // Now hex format
+                result.className = 'result success';
+                result.innerHTML = `✅ Backend Public Key: ${backendPubkey}`;
+                document.getElementById('delegationBtn').disabled = false;
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `❌ Error getting backend pubkey: ${error.message}`;
+            }
+        }
+
+        async function createDelegation() {
+            const result = document.getElementById('delegationResult');
+            result.style.display = 'block';
+            result.className = 'result';
+            result.innerHTML = '⏳ Creating delegation...';
+
+            try {
+                // Create delegation event
+                const now = Math.floor(Date.now() / 1000);
+                const expiresAt = now + (30 * 24 * 60 * 60); // 30 days
+                const allowedKinds = [0, 1, 30023]; // Profile, notes, products
+                const conditions = `kind=${allowedKinds.join(',')}&created_at<${expiresAt}`;
+
+                // Create delegation string and sign it according to NIP-26
+                const delegationString = `nostr:delegation:${backendPubkey}:${conditions}`;
+
+                let delegationToken;
+
+                // Try signMessage first, fallback to signEvent if not available
+                try {
+                    if (window.nostr.signMessage) {
+                        delegationToken = await window.nostr.signMessage(delegationString);
+                    } else {
+                        // Fallback: create a temporary event to sign the delegation string
+                        const tempEvent = {
+                            kind: 1, // Text note
+                            created_at: now,
+                            content: delegationString,
+                            tags: [],
+                            pubkey: userPubkey
+                        };
+
+                        const signedTempEvent = await window.nostr.signEvent(tempEvent);
+                        delegationToken = signedTempEvent.sig; // Extract signature as delegation token
+                    }
+                } catch (error) {
+                    throw new Error(`Failed to create delegation token: ${error.message}`);
+                }
+
+                const delegationEvent = {
+                    kind: 30078,
+                    created_at: now,
+                    content: 'I authorize Synvya to publish my information. The authorization is valid for 30 days.',
+                    tags: [
+                        ['p', backendPubkey], // Target server
+                        ['delegation', userPubkey, conditions, delegationToken] // NIP-26 structure
+                    ],
+                    pubkey: userPubkey
+                };
+
+                // Sign the event
+                const signedEvent = await window.nostr.signEvent(delegationEvent);
+
+                // Submit to backend
+                const timestamp = Math.floor(Date.now() / 1000);
+                const authMessage = `nostr-auth:${timestamp}`;
+                const authSignature = await window.nostr.signMessage(authMessage);
+
+                const response = await fetch('http://localhost:8000/api/delegations/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Nostr-Pubkey': userPubkey,
+                        'X-Nostr-Signature': authSignature,
+                        'X-Nostr-Timestamp': timestamp.toString(),
+                    },
+                    body: JSON.stringify(signedEvent)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    throw new Error(`HTTP ${response.status}: ${errorData.detail || 'Unknown error'}`);
+                }
+
+                const responseData = await response.json();
+                result.className = 'result success';
+                result.innerHTML = `✅ Delegation created successfully!<br>
+                    Status: ${responseData.status}<br>
+                    Expires: ${new Date(responseData.expires_at * 1000).toLocaleString()}<br>
+                    Allowed Kinds: ${responseData.allowed_kinds.join(', ')}`;
+
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `❌ Error creating delegation: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,17 @@
+# docker-compose.db.yml
+version: "3.9"
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: synvya
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: synvya
+    ports:
+      - "5432:5432" # dev only; expose to host
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
