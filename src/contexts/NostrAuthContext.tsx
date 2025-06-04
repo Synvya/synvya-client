@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { nostrService, Profile } from '../lib/nostr';
 
 interface NostrAuthState {
   isAuthenticated: boolean;
   publicKey: string | null;
+  profile: Profile | null;
   isLoading: boolean;
   error: string | null;
   hasNostrExtension: boolean;
@@ -10,7 +12,8 @@ interface NostrAuthState {
 
 type NostrAuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_AUTHENTICATED'; payload: { publicKey: string } }
+  | { type: 'SET_AUTHENTICATED'; payload: { publicKey: string; profile?: Profile } }
+  | { type: 'SET_PROFILE'; payload: Profile }
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'SET_EXTENSION_STATUS'; payload: boolean }
   | { type: 'LOGOUT' };
@@ -18,6 +21,7 @@ type NostrAuthAction =
 const initialState: NostrAuthState = {
   isAuthenticated: false,
   publicKey: null,
+  profile: null,
   isLoading: false,
   error: null,
   hasNostrExtension: false,
@@ -32,9 +36,12 @@ const nostrAuthReducer = (state: NostrAuthState, action: NostrAuthAction): Nostr
         ...state,
         isAuthenticated: true,
         publicKey: action.payload.publicKey,
+        profile: action.payload.profile || null,
         isLoading: false,
         error: null
       };
+    case 'SET_PROFILE':
+      return { ...state, profile: action.payload };
     case 'SET_ERROR':
       return { ...state, error: action.payload, isLoading: false };
     case 'SET_EXTENSION_STATUS':
@@ -50,6 +57,26 @@ interface NostrAuthContextType extends NostrAuthState {
   signIn: () => Promise<void>;
   signUp: () => Promise<void>;
   logout: () => void;
+  updateProfile: (
+    profileData: {
+      name?: string;
+      display_name?: string;
+      about?: string;
+      picture?: string;
+      banner?: string;
+      website?: string;
+      nip05?: string;
+      bot?: boolean;
+    },
+    businessData?: {
+      email?: string;
+      phone?: string;
+      location?: string;
+      businessType?: string;
+      categories?: string[];
+    }
+  ) => Promise<void>;
+  refreshProfile: () => Promise<void>;
   checkNostrExtension: () => void;
 }
 
@@ -58,16 +85,18 @@ const NostrAuthContext = createContext<NostrAuthContextType | undefined>(undefin
 export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(nostrAuthReducer, initialState);
 
+  // Initialize nostr service on mount
+  useEffect(() => {
+    nostrService.initialize();
+    checkNostrExtension();
+  }, []);
+
   const checkNostrExtension = () => {
     const hasExtension = typeof window !== 'undefined' && 'nostr' in window;
     dispatch({ type: 'SET_EXTENSION_STATUS', payload: hasExtension });
     console.log('Nostr extension check:', hasExtension);
     return hasExtension;
   };
-
-  useEffect(() => {
-    checkNostrExtension();
-  }, []);
 
   const signIn = async () => {
     console.log('Attempting sign in...');
@@ -78,11 +107,18 @@ export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         throw new Error('Nostr browser extension not found. Please install nos2x, Alby, or another NIP-07 compatible extension.');
       }
 
-      // @ts-expect-error - window.nostr is added by browser extension
-      const publicKey = await window.nostr.getPublicKey();
+      // Get public key from extension
+      const publicKey = await nostrService.getPublicKey();
       console.log('Got public key:', publicKey);
 
-      dispatch({ type: 'SET_AUTHENTICATED', payload: { publicKey } });
+      // Try to load existing profile
+      const profile = await nostrService.getProfile(publicKey);
+      console.log('Loaded profile:', profile);
+
+      dispatch({
+        type: 'SET_AUTHENTICATED',
+        payload: { publicKey, profile: profile || undefined }
+      });
     } catch (error) {
       console.error('Sign in error:', error);
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Sign in failed' });
@@ -91,8 +127,60 @@ export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const signUp = async () => {
     console.log('Attempting sign up...');
-    // For now, sign up uses the same flow as sign in
+    // For Nostr, sign up is the same as sign in - just connect with extension
     await signIn();
+  };
+
+  const updateProfile = async (
+    profileData: {
+      name?: string;
+      display_name?: string;
+      about?: string;
+      picture?: string;
+      banner?: string;
+      website?: string;
+      nip05?: string;
+      bot?: boolean;
+    },
+    businessData?: {
+      email?: string;
+      phone?: string;
+      location?: string;
+      businessType?: string;
+      categories?: string[];
+    }
+  ) => {
+    if (!state.publicKey) {
+      throw new Error('Not authenticated');
+    }
+
+    dispatch({ type: 'SET_LOADING', payload: true });
+
+    try {
+      await nostrService.updateProfile(profileData, businessData || {});
+
+      // Refresh profile from relays
+      await refreshProfile();
+    } catch (error) {
+      console.error('Profile update error:', error);
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Profile update failed' });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (!state.publicKey) return;
+
+    try {
+      const profile = await nostrService.getProfile(state.publicKey);
+      if (profile) {
+        dispatch({ type: 'SET_PROFILE', payload: profile });
+      }
+    } catch (error) {
+      console.error('Profile refresh error:', error);
+    }
   };
 
   const logout = () => {
@@ -105,6 +193,8 @@ export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     signIn,
     signUp,
     logout,
+    updateProfile,
+    refreshProfile,
     checkNostrExtension,
   };
 

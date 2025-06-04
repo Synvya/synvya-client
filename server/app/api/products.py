@@ -1,5 +1,5 @@
 """
-Products API endpoints.
+Simple Products API - Frontend now handles Nostr operations directly
 """
 
 from typing import Any
@@ -8,32 +8,38 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
+# Simple in-memory storage for demo - replace with proper database in production
+products_store: list[dict[str, Any]] = []
+
 
 @router.get("/")
 async def get_products() -> list[dict[str, Any]]:
     """
-    Get all products for the authenticated merchant.
-
-    TODO: Implement actual product retrieval from database
-    - Query products by merchant public key
-    - Apply pagination and filtering
-    - Return product data with images and metadata
+    Get all products (simplified - no authentication needed for demo).
+    Frontend handles Nostr operations directly.
     """
-    return []
+    return products_store
 
 
 @router.post("/")
 async def create_product(product_data: dict[str, Any]) -> dict[str, Any]:
     """
-    Create a new product.
-
-    TODO: Implement product creation
-    - Validate product data against schema
-    - Save to database with merchant association
-    - Handle image uploads to cloud storage
-    - Return created product with ID
+    Create a new product (simplified demo endpoint).
+    In the new architecture, products are stored on Nostr relays via frontend.
     """
-    return {"message": "Product creation not implemented", "data": product_data}
+    product_id = len(products_store) + 1
+    product = {
+        "id": product_id,
+        "created_at": "2024-01-01T00:00:00Z",
+        **product_data,
+    }
+    products_store.append(product)
+
+    return {
+        "success": True,
+        "message": "Product created successfully (demo)",
+        "product": product,
+    }
 
 
 @router.post("/bulk-import")
@@ -41,32 +47,41 @@ async def bulk_import_products(
     source: str, data: list[dict[str, Any]]
 ) -> dict[str, Any]:
     """
-    Bulk import products from external platforms.
-
-    TODO: Implement bulk import functionality
-    - Support Square API integration
-    - Support Shopify API integration
-    - Validate and transform external data
-    - Handle duplicate detection
-    - Return import summary with success/failure counts
+    Bulk import products from external platforms (simplified).
+    Frontend can integrate with external APIs directly or use this as a proxy.
     """
+    imported_count = 0
+    for item in data:
+        # Simple validation and import logic
+        if "name" in item and "price" in item:
+            product = {
+                "id": len(products_store) + 1,
+                "source": source,
+                "created_at": "2024-01-01T00:00:00Z",
+                **item,
+            }
+            products_store.append(product)
+            imported_count += 1
+
     return {
-        "message": f"Bulk import from {source} not implemented",
-        "imported_count": 0,
-        "failed_count": 0,
-        "data": data,
+        "success": True,
+        "message": f"Imported {imported_count} products from {source}",
+        "imported_count": imported_count,
+        "total_products": len(products_store),
     }
 
 
 @router.post("/upload-csv")
 async def upload_csv(file_data: bytes) -> dict[str, Any]:
     """
-    Upload and process CSV file for product import.
-
-    TODO: Implement CSV processing
-    - Validate CSV format (name, price, description, etc.)
-    - Parse and validate each row
-    - Create products in batch
-    - Return processing results
+    Upload and process CSV file for product import (simplified).
+    Frontend can handle CSV parsing directly or send processed data here.
     """
-    return {"message": "CSV upload not implemented", "processed_rows": 0, "errors": []}
+    # In a real implementation, you'd parse the CSV and extract products
+    # For now, just return a success message
+
+    return {
+        "success": True,
+        "message": "CSV upload endpoint ready - implement CSV parsing as needed",
+        "note": "Frontend can handle CSV parsing directly with libraries like papaparse",
+    }
