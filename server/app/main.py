@@ -2,21 +2,21 @@
 Main entry point for the Synvya Retail API.
 """
 
+import logging
 import os
 from contextlib import asynccontextmanager
 from datetime import UTC
 from pathlib import Path
 
 import sqlalchemy as sa
-from dotenv import load_dotenv
-from fastapi import Depends, FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from synvya_sdk import KeyEncoding, NostrClient, NostrKeys, generate_keys
-
 from app.api import delegations, products, profile
 from app.db import delegations as deleg_repo
 from app.db.session import async_session
 from app.dependencies import get_public_key
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from synvya_sdk import KeyEncoding, NostrClient, NostrKeys, generate_keys
 
 DEFAULT_RELAYS = ["wss://relay.primal.net"]
 
@@ -58,6 +58,7 @@ async def lifespan(app: FastAPI):
         app.state.nostr_client = await NostrClient.create(
             DEFAULT_RELAYS, app.state.private_key
         )
+        app.state.nostr_client.set_logger(logging.DEBUG)
         print("Global NostrClient created successfully")
 
         # Load existing delegations from database into the client

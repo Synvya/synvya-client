@@ -140,16 +140,23 @@ class NostrService {
         // Sort by created_at to get chronological order (newest first)
         const sortedEvents = events.sort((a, b) => b.created_at - a.created_at);
 
-        // Look for events with our business labels first
-        const businessLabels = ['business.email', 'business.location', 'business.type', 'business.phone'];
+        // Look for events with our business data first
         let selectedEvent = null;
 
-        // First try to find an event with any of our business labels
+        // First try to find an event with any of our business data (mixed formats)
         for (const event of sortedEvents) {
-            const hasBusinessLabel = event.tags.some(tag =>
-                tag[0] === 'L' && businessLabels.includes(tag[1])
-            );
-            if (hasBusinessLabel) {
+            const hasBusinessData = event.tags.some(tag => {
+                // Check for NIP-39 "i" tags (email, phone, location)
+                if (tag[0] === 'i' && tag[1]) {
+                    return tag[1].startsWith('email:') || tag[1].startsWith('phone:') || tag[1].startsWith('location:');
+                }
+                // Check for label format (business type)
+                if (tag[0] === 'l' && tag[2] === 'business.type') {
+                    return true;
+                }
+                return false;
+            });
+            if (hasBusinessData) {
                 selectedEvent = event;
                 break;
             }
@@ -166,11 +173,11 @@ class NostrService {
             const profileData = JSON.parse(selectedEvent.content);
             console.log('Profile content:', profileData);
 
-            // Extract business data from tags
-            const email = this.extractBusinessField(selectedEvent.tags, 'business.email');
-            const phone = this.extractBusinessField(selectedEvent.tags, 'business.phone');
-            const location = this.extractBusinessField(selectedEvent.tags, 'business.location');
-            const businessType = this.extractBusinessField(selectedEvent.tags, 'business.type');
+            // Extract business data from tags using NIP-39 format
+            const email = this.extractBusinessField(selectedEvent.tags, 'email');
+            const phone = this.extractBusinessField(selectedEvent.tags, 'phone');
+            const location = this.extractBusinessField(selectedEvent.tags, 'location');
+            const businessType = this.extractBusinessField(selectedEvent.tags, 'business_type');
 
             return {
                 pubkey,
@@ -186,23 +193,38 @@ class NostrService {
             return {
                 pubkey,
                 tags: selectedEvent.tags,
-                // Still try to extract business fields from tags
-                email: this.extractBusinessField(selectedEvent.tags, 'business.email'),
-                phone: this.extractBusinessField(selectedEvent.tags, 'business.phone'),
-                location: this.extractBusinessField(selectedEvent.tags, 'business.location'),
-                businessType: this.extractBusinessField(selectedEvent.tags, 'business.type'),
+                // Still try to extract business fields from tags using NIP-39 format
+                email: this.extractBusinessField(selectedEvent.tags, 'email'),
+                phone: this.extractBusinessField(selectedEvent.tags, 'phone'),
+                location: this.extractBusinessField(selectedEvent.tags, 'location'),
+                businessType: this.extractBusinessField(selectedEvent.tags, 'business_type'),
             };
         }
     }
 
     /**
-     * Extract business field value from event tags
+     * Extract business field value from event tags using mixed formats
+     * - NIP-39 external identities for email, phone, location
+     * - Label format for business type
      */
     private extractBusinessField(tags: string[][], fieldType: string): string | undefined {
+        // For business type, use the label format
+        if (fieldType === 'business_type') {
+            const tag = tags.find(tag =>
+                tag[0] === 'l' && tag[2] === 'business.type'
+            );
+            return tag ? tag[1] : undefined;
+        }
+
+        // For email, phone, location, use NIP-39 "i" tags
         const tag = tags.find(tag =>
-            tag[0] === 'l' && tag[2] === fieldType
+            tag[0] === 'i' && tag[1] && tag[1].startsWith(`${fieldType}:`)
         );
-        return tag ? tag[1] : undefined;
+        if (tag && tag[1]) {
+            // Extract the value after the claim type prefix
+            return tag[1].substring(`${fieldType}:`.length);
+        }
+        return undefined;
     }
 
     /**
@@ -239,22 +261,21 @@ class NostrService {
             bot: profileData.bot || false,
         };
 
-        // Build tags for business data
+        // Build tags for business data using NIP-39 external identities
         const tags: string[][] = [];
 
-        // Add business data as labels
+        // Add contact info as external identities using NIP-39 "i" tags
         if (businessData.email) {
-            tags.push(['L', 'business.email']);
-            tags.push(['l', businessData.email, 'business.email']);
+            tags.push(['i', `email:${businessData.email}`, '']);
         }
         if (businessData.phone) {
-            tags.push(['L', 'business.phone']);
-            tags.push(['l', businessData.phone, 'business.phone']);
+            tags.push(['i', `phone:${businessData.phone}`, '']);
         }
         if (businessData.location) {
-            tags.push(['L', 'business.location']);
-            tags.push(['l', businessData.location, 'business.location']);
+            tags.push(['i', `location:${businessData.location}`, '']);
         }
+
+        // Business type still uses the label format
         if (businessData.businessType) {
             tags.push(['L', 'business.type']);
             tags.push(['l', businessData.businessType, 'business.type']);
