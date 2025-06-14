@@ -213,6 +213,8 @@ class NostrService {
             const tag = tags.find(tag =>
                 tag[0] === 'l' && tag[2] === 'business.type'
             );
+            console.log(`Extracting business type from tags:`, tags.filter(t => t[0] === 'l' || t[0] === 'L'));
+            console.log(`Found business type tag:`, tag);
             return tag ? tag[1] : undefined;
         }
 

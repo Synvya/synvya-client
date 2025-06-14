@@ -288,8 +288,11 @@ const FormPage: React.FC = () => {
       console.log('Parsed address:', { street, city, state, zipCode, country });
     }
 
-    // Extract business type - now comes directly from businessType field
-    const businessType = profileData.businessType || 'business';
+    // Extract business type - preserve existing value if not found in profile
+    const businessType = profileData.businessType || formData.businessType;
+    console.log('Business type from profile:', profileData.businessType);
+    console.log('Current form business type:', formData.businessType);
+    console.log('Final business type to use:', businessType);
 
     // Extract categories from 't' tags
     let categories = '';
@@ -575,7 +578,7 @@ const FormPage: React.FC = () => {
                 <option value="business">Business</option>
                 <option value="retail">Retail</option>
                 <option value="restaurant">Restaurant</option>
-                <option value="services">Services</option>
+                <option value="service">Service</option>
                 <option value="entertainment">Entertainment</option>
                 <option value="other">Other</option>
               </select>
