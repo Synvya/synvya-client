@@ -8,6 +8,10 @@ on:
     branches: [ main ]
   workflow_dispatch:        # allow manual “Run workflow” button
 
+permissions:
+  id-token: write      # <-- allows OIDC token
+  contents: read       # <-- allows checkout
+    
 concurrency:                # never run two deploys in parallel
   group: deploy-client
   cancel-in-progress: true
