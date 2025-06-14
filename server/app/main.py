@@ -7,12 +7,13 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from app.api import delegations, products, profile
-from app.dependencies import get_public_key
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from synvya_sdk import KeyEncoding, NostrClient, NostrKeys, generate_keys
+
+from app.api import delegations, products, profile
+from app.dependencies import get_public_key
 
 DEFAULT_RELAYS = ["wss://relay.primal.net"]
 
