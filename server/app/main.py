@@ -5,13 +5,9 @@ Main entry point for the Synvya Retail API.
 import logging
 import os
 from contextlib import asynccontextmanager
-from datetime import UTC
 from pathlib import Path
 
-import sqlalchemy as sa
 from app.api import delegations, products, profile
-from app.db import delegations as deleg_repo
-from app.db.session import async_session
 from app.dependencies import get_public_key
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
