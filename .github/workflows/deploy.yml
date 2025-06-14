@@ -11,7 +11,7 @@ on:
 permissions:
   id-token: write      # <-- allows OIDC token
   contents: read       # <-- allows checkout
-    
+
 concurrency:                # never run two deploys in parallel
   group: deploy-client
   cancel-in-progress: true
@@ -72,8 +72,4 @@ jobs:
     # Bust CloudFront cache for index.html only
     # -----------------------------------------------------
     - name: Invalidate index.html
-      run: |
-        aws cloudfront create-invalidation \
-          --distribution-id $DISTRIBUTION_ID \
-          --paths "/index.html" \
-          --caller-reference "gha-$(date +%s)"
+      run: aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/index.html"
