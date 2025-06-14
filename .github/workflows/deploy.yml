@@ -1,0 +1,75 @@
+# =========================================================
+# Deploy Synvya Client → S3 + CloudFront
+# =========================================================
+name: Deploy client.synvya.com
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:        # allow manual “Run workflow” button
+
+concurrency:                # never run two deploys in parallel
+  group: deploy-client
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "18"
+  BUILD_DIR: dist
+  BUCKET_NAME: client-synvya-com               # ❶ S3 bucket
+  DISTRIBUTION_ID: E3DPPDWMXK3MAD              # ❷ CloudFront ID
+  AWS_REGION: us-east-1                        # ❸ Region for S3 + CLI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # -----------------------------------------------------
+    # Checkout & build
+    # -----------------------------------------------------
+    - name: Check out repo
+      uses: actions/checkout@v4
+
+    - name: Setup Node ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+
+    - name: Install deps & build
+      run: |
+        npm ci
+        npm run build
+
+    # -----------------------------------------------------
+    # Auth to AWS via OIDC
+    # -----------------------------------------------------
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}   # ❹
+        aws-region: ${{ env.AWS_REGION }}
+
+    # -----------------------------------------------------
+    # Upload hashed assets (1 year cache) and index.html (60 s)
+    # -----------------------------------------------------
+    - name: Sync hashed assets to S3
+      run: |
+        aws s3 sync $BUILD_DIR/ s3://$BUCKET_NAME \
+          --exclude "*.html" \
+          --cache-control "public,max-age=31536000,immutable"
+
+    - name: Upload index.html with short cache-control
+      run: |
+        aws s3 cp $BUILD_DIR/index.html s3://$BUCKET_NAME/index.html \
+          --cache-control "public,max-age=60"
+
+    # -----------------------------------------------------
+    # Bust CloudFront cache for index.html only
+    # -----------------------------------------------------
+    - name: Invalidate index.html
+      run: |
+        aws cloudfront create-invalidation \
+          --distribution-id $DISTRIBUTION_ID \
+          --paths "/index.html" \
+          --caller-reference "gha-$(date +%s)"
