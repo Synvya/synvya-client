@@ -7,13 +7,12 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from app.api import products, profile
+from app.dependencies import get_public_key
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from synvya_sdk import KeyEncoding, NostrClient, NostrKeys, generate_keys
-
-from app.api import delegations, products, profile
-from app.dependencies import get_public_key
 
 DEFAULT_RELAYS = ["wss://relay.primal.net"]
 
@@ -114,4 +113,3 @@ async def get_backend_public_key(
 
 app.include_router(products.router, prefix="/api/products", tags=["products"])
 app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
-app.include_router(delegations.router, tags=["delegations"])

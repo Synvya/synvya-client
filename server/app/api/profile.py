@@ -4,10 +4,9 @@ Profile API endpoints.
 
 from typing import Any
 
+from app.dependencies import get_current_user, get_nostr_client
 from fastapi import APIRouter, Depends, HTTPException
 from synvya_sdk import Profile
-
-from app.dependencies import get_current_user, get_nostr_client
 
 router = APIRouter()
 
@@ -61,7 +60,7 @@ async def create_or_update_profile(
     Create or update merchant profile.
 
     This endpoint receives profile data and publishes it to the Nostr network
-    using the backend's delegated permissions via the global NostrClient.
+    using the backend's NostrClient.
 
     Args:
         profile_data: The profile data to publish
@@ -90,16 +89,9 @@ async def create_or_update_profile(
                 detail="Profile public_key must match authenticated user",
             )
 
-        # Check if we have a valid delegation for this user
-        if not nostr_client.has_delegation_for(user_pubkey):
-            raise HTTPException(
-                status_code=403,
-                detail="No valid delegation found for user. Please create a delegation first.",
-            )
+        print(f"Using global NostrClient for user: {user_pubkey}")
 
-        print(f"Using global NostrClient with delegation for user: {user_pubkey}")
-
-        # Create Profile object with the user's public key (the delegator)
+        # Create Profile object with the user's public key
         profile = Profile(user_pubkey)
 
         # Set profile fields from the received data
@@ -122,7 +114,7 @@ async def create_or_update_profile(
                 if hashtag:  # Only add non-empty hashtags
                     profile.add_hashtag(hashtag)
 
-        # Publish the profile using the global client with delegation
+        # Publish the profile using the global client
         success = await nostr_client.async_set_profile(profile)
 
         if success:

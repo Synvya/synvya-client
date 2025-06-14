@@ -1,5 +1,5 @@
 # API package initialization
 
-from . import delegations, products, profile
+from . import products, profile
 
-__all__ = ["delegations", "products", "profile"]
+__all__ = ["products", "profile"]
