@@ -7,19 +7,21 @@ interface CheckboxProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   className?: string;
+  disabled?: boolean;
 }
 
-const Checkbox: React.FC<CheckboxProps> = ({ id, label, checked, onChange, className = "" }) => {
+const Checkbox: React.FC<CheckboxProps> = ({ id, label, checked, onChange, className = "", disabled = false }) => {
   return (
-    <div className={`flex items-start space-x-3 ${className}`}>
+    <div className={`flex items-start space-x-3 ${className} ${disabled ? 'opacity-50' : ''}`}>
       <input
         type="checkbox"
         id={id}
         checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="mt-1 w-4 h-4 text-[#9F7AEA] border-gray-300 rounded focus:ring-[#9F7AEA] focus:ring-2"
+        onChange={(e) => !disabled && onChange(e.target.checked)}
+        disabled={disabled}
+        className="mt-1 w-4 h-4 text-[#9F7AEA] border-gray-300 rounded focus:ring-[#9F7AEA] focus:ring-2 disabled:cursor-not-allowed"
       />
-      <label htmlFor={id} className="text-sm text-[#01013C] leading-5 cursor-pointer">
+      <label htmlFor={id} className={`text-sm text-[#01013C] leading-5 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
         {label}
       </label>
     </div>

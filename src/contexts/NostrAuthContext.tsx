@@ -8,6 +8,7 @@ interface NostrAuthState {
   isLoading: boolean;
   error: string | null;
   hasNostrExtension: boolean;
+  isCheckingExtension: boolean;
 }
 
 type NostrAuthAction =
@@ -16,6 +17,7 @@ type NostrAuthAction =
   | { type: 'SET_PROFILE'; payload: Profile }
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'SET_EXTENSION_STATUS'; payload: boolean }
+  | { type: 'SET_CHECKING_EXTENSION'; payload: boolean }
   | { type: 'LOGOUT' };
 
 const initialState: NostrAuthState = {
@@ -25,6 +27,7 @@ const initialState: NostrAuthState = {
   isLoading: false,
   error: null,
   hasNostrExtension: false,
+  isCheckingExtension: true,
 };
 
 const nostrAuthReducer = (state: NostrAuthState, action: NostrAuthAction): NostrAuthState => {
@@ -46,8 +49,10 @@ const nostrAuthReducer = (state: NostrAuthState, action: NostrAuthAction): Nostr
       return { ...state, error: action.payload, isLoading: false };
     case 'SET_EXTENSION_STATUS':
       return { ...state, hasNostrExtension: action.payload };
+    case 'SET_CHECKING_EXTENSION':
+      return { ...state, isCheckingExtension: action.payload };
     case 'LOGOUT':
-      return { ...initialState, hasNostrExtension: state.hasNostrExtension };
+      return { ...initialState, hasNostrExtension: state.hasNostrExtension, isCheckingExtension: false };
     default:
       return state;
   }
@@ -85,18 +90,34 @@ const NostrAuthContext = createContext<NostrAuthContextType | undefined>(undefin
 export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(nostrAuthReducer, initialState);
 
+  const checkNostrExtension = React.useCallback(() => {
+    dispatch({ type: 'SET_CHECKING_EXTENSION', payload: true });
+
+    // Check immediately
+    const hasExtension = typeof window !== 'undefined' && 'nostr' in window;
+    dispatch({ type: 'SET_EXTENSION_STATUS', payload: hasExtension });
+    console.log('Nostr extension check:', hasExtension);
+
+    // If not found, wait a bit and check again (extensions load async)
+    if (!hasExtension) {
+      setTimeout(() => {
+        const hasExtensionDelayed = typeof window !== 'undefined' && 'nostr' in window;
+        dispatch({ type: 'SET_EXTENSION_STATUS', payload: hasExtensionDelayed });
+        dispatch({ type: 'SET_CHECKING_EXTENSION', payload: false });
+        console.log('Nostr extension check (delayed):', hasExtensionDelayed);
+      }, 2000);
+    } else {
+      dispatch({ type: 'SET_CHECKING_EXTENSION', payload: false });
+    }
+
+    return hasExtension;
+  }, []);
+
   // Initialize nostr service on mount
   useEffect(() => {
     nostrService.initialize();
     checkNostrExtension();
-  }, []);
-
-  const checkNostrExtension = () => {
-    const hasExtension = typeof window !== 'undefined' && 'nostr' in window;
-    dispatch({ type: 'SET_EXTENSION_STATUS', payload: hasExtension });
-    console.log('Nostr extension check:', hasExtension);
-    return hasExtension;
-  };
+  }, [checkNostrExtension]);
 
   const signIn = async () => {
     console.log('Attempting sign in...');

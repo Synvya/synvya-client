@@ -19,4 +19,10 @@ VITE_ENVIRONMENT="production"
 # VITE_ANALYTICS_ID=""
 
 # Optional: Error Reporting
-# VITE_SENTRY_DSN="" 
+# VITE_SENTRY_DSN=""
+
+# For Frontend (Vite)
+VITE_ZAPRITE_API_KEY=your_zaprite_api_key_here
+
+# For Serverless Functions (Netlify/AWS Lambda)
+ZAPRITE_API_KEY=your_zaprite_api_key_here 

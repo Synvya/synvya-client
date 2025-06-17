@@ -10,6 +10,8 @@ interface AuthGuardProps {
 const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useNostrAuth();
 
+  console.log('AuthGuard: isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -22,6 +24,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   }
 
   if (!isAuthenticated) {
+    console.log('AuthGuard: Redirecting to signin - user not authenticated');
     return <Navigate to="/signin" replace />;
   }
 
