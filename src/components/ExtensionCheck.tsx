@@ -11,14 +11,14 @@ const ExtensionCheck: React.FC<ExtensionCheckProps> = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const { hasNostrExtension, isCheckingExtension, checkNostrExtension } = useNostrAuth();
-    const [isCheckingContact, setIsCheckingContact] = useState(false);
+    const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
     const checkInProgressRef = useRef(false);
-    const contactCheckCache = useRef<Map<string, { exists: boolean; timestamp: number }>>(new Map());
+    const subscriptionCheckCache = useRef<Map<string, { exists: boolean; timestamp: number }>>(new Map());
 
     useEffect(() => {
         console.log('ExtensionCheck: Current path:', location.pathname);
-        // Don't check if we're already on form page (post-payment) or payment page (pre-payment)
-        if (location.pathname === '/form' || location.pathname === '/payment') {
+        // Don't check if we're already on form page (post-payment), payment page (pre-payment), orders page, or admin pages
+        if (location.pathname === '/form' || location.pathname === '/payment' || location.pathname === '/orders' || location.pathname.startsWith('/admin/')) {
             console.log('ExtensionCheck: Skipping check for', location.pathname);
             return;
         }
@@ -33,13 +33,13 @@ const ExtensionCheck: React.FC<ExtensionCheckProps> = ({ children }) => {
             const currentPath = location.pathname;
             console.log('ExtensionCheck: hasNostrExtension:', hasNostrExtension, 'isCheckingExtension:', isCheckingExtension, 'path:', currentPath);
 
-            // Skip enforcement for form page (post-payment) and payment page (pre-payment)
-            if (currentPath === '/form' || currentPath === '/payment') {
+            // Skip enforcement for form page (post-payment), payment page (pre-payment), orders page, and admin pages
+            if (currentPath === '/form' || currentPath === '/payment' || currentPath === '/orders' || currentPath.startsWith('/admin/')) {
                 return;
             }
 
             // Wait for extension check to complete or if check already in progress
-            if (isCheckingExtension || isCheckingContact || checkInProgressRef.current) {
+            if (isCheckingExtension || isCheckingSubscription || checkInProgressRef.current) {
                 return;
             }
 
@@ -50,46 +50,46 @@ const ExtensionCheck: React.FC<ExtensionCheckProps> = ({ children }) => {
                 return;
             }
 
-            // 2. Has NIP-07 extension → check if contact exists in Zaprite
+            // 2. Has NIP-07 extension → check if user has active subscription
             try {
                 checkInProgressRef.current = true;
-                setIsCheckingContact(true);
-                console.log('ExtensionCheck: Extension found, checking contact status');
+                setIsCheckingSubscription(true);
+                console.log('ExtensionCheck: Extension found, checking subscription status');
 
                 // Get public key from extension
                 const publicKey = await nostrService.getPublicKey();
                 console.log('ExtensionCheck: Got public key:', publicKey);
 
                 // Check cache first (cache for 5 minutes)
-                const cachedResult = contactCheckCache.current.get(publicKey);
+                const cachedResult = subscriptionCheckCache.current.get(publicKey);
                 const now = Date.now();
                 if (cachedResult && (now - cachedResult.timestamp) < 5 * 60 * 1000) {
                     console.log('ExtensionCheck: Using cached result:', cachedResult.exists);
 
                     if (cachedResult.exists) {
                         if (currentPath !== '/signin') {
-                            console.log('ExtensionCheck: Cached - Contact exists, redirecting to signin');
+                            console.log('ExtensionCheck: Cached - Active subscription found, redirecting to signin');
                             navigate('/signin');
                         } else {
-                            console.log('ExtensionCheck: Cached - Contact exists, staying on signin');
+                            console.log('ExtensionCheck: Cached - Active subscription found, staying on signin');
                         }
                     } else {
                         if (currentPath !== '/signup') {
-                            console.log('ExtensionCheck: Cached - Contact does not exist, redirecting to signup');
+                            console.log('ExtensionCheck: Cached - No active subscription, redirecting to signup');
                             navigate('/signup');
                         } else {
-                            console.log('ExtensionCheck: Cached - Contact does not exist, staying on signup');
+                            console.log('ExtensionCheck: Cached - No active subscription, staying on signup');
                         }
                     }
                     return;
                 }
 
-                // Check if contact exists
+                // Check if user has active subscription
                 // Use Netlify dev server URL for local development
                 const isLocalhost = window.location.hostname === 'localhost';
                 const functionUrl = isLocalhost
-                    ? 'http://localhost:8888/.netlify/functions/check-contact'
-                    : '/.netlify/functions/check-contact';
+                    ? 'http://localhost:8888/.netlify/functions/check-subscription'
+                    : '/.netlify/functions/check-subscription';
 
                 const response = await fetch(functionUrl, {
                     method: 'POST',
@@ -104,39 +104,40 @@ const ExtensionCheck: React.FC<ExtensionCheckProps> = ({ children }) => {
                 }
 
                 const result = await response.json();
-                console.log('ExtensionCheck: Contact check result:', result);
+                console.log('ExtensionCheck: Subscription check result:', result);
 
-                // Cache the result
-                contactCheckCache.current.set(publicKey, {
-                    exists: result.exists,
+                // Cache the result (using exists field for consistency with existing cache structure)
+                const hasActiveSubscription = result.isValid && result.subscription?.status === 'active';
+                subscriptionCheckCache.current.set(publicKey, {
+                    exists: hasActiveSubscription,
                     timestamp: Date.now()
                 });
 
-                if (result.exists) {
-                    // Contact found → redirect to /signin (or stay on /signin if already there)
+                if (hasActiveSubscription) {
+                    // Active subscription found → redirect to /signin (or stay on /signin if already there)
                     if (currentPath !== '/signin') {
-                        console.log('ExtensionCheck: Contact exists, redirecting to signin');
+                        console.log('ExtensionCheck: Active subscription found, redirecting to signin');
                         navigate('/signin');
                     } else {
-                        console.log('ExtensionCheck: Contact exists, staying on signin');
+                        console.log('ExtensionCheck: Active subscription found, staying on signin');
                     }
                 } else {
-                    // Contact not found → redirect to /signup (or stay on /signup if already there)
+                    // No active subscription → redirect to /signup (or stay on /signup if already there)
                     if (currentPath !== '/signup') {
-                        console.log('ExtensionCheck: Contact does not exist, redirecting to signup');
+                        console.log('ExtensionCheck: No active subscription, redirecting to signup');
                         navigate('/signup');
                     } else {
-                        console.log('ExtensionCheck: Contact does not exist, staying on signup');
+                        console.log('ExtensionCheck: No active subscription, staying on signup');
                     }
                 }
             } catch (error) {
-                console.error('ExtensionCheck: Error checking contact:', error);
+                console.error('ExtensionCheck: Error checking subscription:', error);
                 // On error, default to signup flow
                 if (currentPath !== '/signup') {
                     navigate('/signup');
                 }
             } finally {
-                setIsCheckingContact(false);
+                setIsCheckingSubscription(false);
                 checkInProgressRef.current = false;
             }
         };

@@ -25,4 +25,13 @@ VITE_ENVIRONMENT="production"
 VITE_ZAPRITE_API_KEY=your_zaprite_api_key_here
 
 # For Serverless Functions (Netlify/AWS Lambda)
-ZAPRITE_API_KEY=your_zaprite_api_key_here 
+ZAPRITE_API_KEY=your_zaprite_api_key_here
+
+# AWS Configuration for Subscription Database (Production)
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+SUBSCRIPTION_DB_BUCKET=synvya-subscriptions
+
+# For local development, these AWS variables can be omitted
+# The system will automatically use local file storage instead

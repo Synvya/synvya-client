@@ -19,29 +19,29 @@ const NostrExtensionModal: React.FC<NostrExtensionModalProps> = ({ isOpen, onClo
           Nostr Extension Required
         </h2>
         <p className="text-gray-600 mb-6">
-          To use Synvya, you need to install a Nostr browser extension like nos2x or Alby. 
+          To use Synvya, you need to install a Nostr browser extension like nos2x or Alby.
           These extensions provide secure access to your Nostr identity.
         </p>
-        
+
         <div className="space-y-3 mb-6">
           <div className="flex items-center justify-between p-3 border rounded-lg">
             <span className="font-medium">nos2x</span>
-            <a 
+            <a
               href="https://chrome.google.com/webstore/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#9F7AEA] hover:underline"
+              className="text-[#49BB5B] hover:underline"
             >
               Install
             </a>
           </div>
           <div className="flex items-center justify-between p-3 border rounded-lg">
             <span className="font-medium">Alby</span>
-            <a 
+            <a
               href="https://chrome.google.com/webstore/detail/alby/iokeahhehimjnekafflcihljlcjccdbe"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#9F7AEA] hover:underline"
+              className="text-[#49BB5B] hover:underline"
             >
               Install
             </a>

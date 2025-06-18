@@ -139,7 +139,7 @@ const SignUpPage: React.FC = () => {
               Already have an account?{' '}
               <Link
                 to="/signin"
-                className="text-[#9F7AEA] hover:underline font-medium"
+                className="text-[#49BB5B] hover:underline font-medium"
               >
                 Sign in here
               </Link>

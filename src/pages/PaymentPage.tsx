@@ -9,7 +9,6 @@ const PaymentPage: React.FC = () => {
     const navigate = useNavigate();
     const { isAuthenticated, publicKey } = useNostrAuth();
     const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual' | null>(null);
-    const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -61,8 +60,7 @@ const PaymentPage: React.FC = () => {
                 },
                 body: JSON.stringify({
                     planType,
-                    publicKey,
-                    email
+                    publicKey
                 })
             });
 
@@ -88,11 +86,6 @@ const PaymentPage: React.FC = () => {
 
     const handleProceedToPayment = async () => {
         if (!selectedPlan) return;
-
-        if (!email.trim()) {
-            setError('Email address is required');
-            return;
-        }
 
         setIsLoading(true);
         setError(null);
@@ -140,24 +133,6 @@ const PaymentPage: React.FC = () => {
                             <p className="text-sm font-medium text-red-800">{error}</p>
                         </div>
                     )}
-
-                    <div className="mb-8">
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                            Email Address
-                        </label>
-                        <input
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter your email address"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#49BB5B] focus:border-transparent transition-all duration-200"
-                            required
-                        />
-                        <p className="text-sm text-gray-500 mt-2">
-                            Required for payment processing and subscription management
-                        </p>
-                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         {plans.map((plan) => (
@@ -215,7 +190,7 @@ const PaymentPage: React.FC = () => {
                     <div className="flex justify-center">
                         <PrimaryButton
                             onClick={handleProceedToPayment}
-                            disabled={!selectedPlan || !email.trim() || isLoading}
+                            disabled={!selectedPlan || isLoading}
                             className="px-8 py-3"
                         >
                             {isLoading ? 'Creating Payment...' : 'Proceed to Payment'}

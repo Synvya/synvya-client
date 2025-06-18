@@ -50,7 +50,7 @@ const SignInPage: React.FC = () => {
           )}
 
           <div className="space-y-4">
-            <PrimaryButton 
+            <PrimaryButton
               onClick={handleSignIn}
               disabled={isLoading}
               className="w-full"
@@ -60,9 +60,9 @@ const SignInPage: React.FC = () => {
 
             <p className="text-sm text-gray-600">
               New to Synvya?{' '}
-              <Link 
-                to="/signup" 
-                className="text-[#9F7AEA] hover:underline font-medium"
+              <Link
+                to="/signup"
+                className="text-[#49BB5B] hover:underline font-medium"
               >
                 Sign up here
               </Link>
@@ -71,7 +71,7 @@ const SignInPage: React.FC = () => {
         </div>
       </div>
 
-      <NostrExtensionModal 
+      <NostrExtensionModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onRetry={handleRetry}

@@ -1,4 +1,19 @@
+import { updateSubscription } from './lib/subscription-db.js';
+
 export const handler = async (event, context) => {
+    // Handle CORS preflight
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS'
+            },
+            body: ''
+        };
+    }
+
     // Only allow POST requests
     if (event.httpMethod !== 'POST') {
         return {
@@ -8,7 +23,7 @@ export const handler = async (event, context) => {
     }
 
     try {
-        const { planType, publicKey, email } = JSON.parse(event.body);
+        const { planType, publicKey } = JSON.parse(event.body);
 
         // Get API key from environment variables
         const apiKey = process.env.ZAPRITE_API_KEY;
@@ -33,12 +48,8 @@ export const handler = async (event, context) => {
             };
         }
 
-        if (!email) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ error: 'Email is required' })
-            };
-        }
+        // Use fixed email for all contacts
+        const fixedEmail = 'wedonotcollect@youremail.com';
 
         // Get the origin from the request for redirect URL
         // For development, use the Vite dev server since Netlify dev server has rendering issues
@@ -85,7 +96,7 @@ export const handler = async (event, context) => {
             // Step 1b: Create a new contact if not found
             const contactData = {
                 legalName: publicKey,
-                email: email
+                email: fixedEmail
             };
 
             console.log('Creating new Zaprite contact:', contactData);
@@ -116,21 +127,36 @@ export const handler = async (event, context) => {
             console.log('New contact created successfully:', contactResult);
         }
 
+        // Calculate valid-through date
+        const currentDate = new Date();
+        let validThroughDate;
+
+        if (planType === 'monthly') {
+            // Add one month
+            validThroughDate = new Date(currentDate);
+            validThroughDate.setMonth(validThroughDate.getMonth() + 1);
+        } else {
+            // Add one year
+            validThroughDate = new Date(currentDate);
+            validThroughDate.setFullYear(validThroughDate.getFullYear() + 1);
+        }
+
+        // Format as DD-MM-YYYY
+        const validThroughFormatted = `${validThroughDate.getDate().toString().padStart(2, '0')}-${(validThroughDate.getMonth() + 1).toString().padStart(2, '0')}-${validThroughDate.getFullYear()}`;
+
         // Step 2: Create order with contactId
         const orderData = {
             amount: plan.price * 100, // Convert to cents
             currency: 'USD',
-            sendReceiptToCustomer: true,
+            sendReceiptToCustomer: false,
             allowSavePaymentProfile: true,
             contactId: contactResult.id,
             redirectUrl: `${origin}/form`,
             label: planType === 'monthly' ? 'Monthly Subscription' : 'Annual Subscription',
-            customerData: {
-                email: email
-            },
             metadata: {
                 'public-key': publicKey,
-                'plan-type': planType
+                'plan-type': planType,
+                'valid-through': validThroughFormatted
             }
         };
 
@@ -161,6 +187,22 @@ export const handler = async (event, context) => {
 
         const orderResult = JSON.parse(responseData);
         console.log('Order created successfully:', orderResult);
+
+        // Step 3: Save subscription data to our database
+        try {
+            await updateSubscription(publicKey, {
+                contactId: contactResult.id,
+                validThrough: validThroughFormatted,
+                planType: planType,
+                orderId: orderResult.id,
+                status: 'pending', // Will be updated via webhook when payment is confirmed
+                orderIds: [] // Initialize empty array for order history
+            });
+            console.log('Subscription data saved successfully');
+        } catch (dbError) {
+            console.error('Failed to save subscription data:', dbError);
+            // Don't fail the order creation, but log the error
+        }
 
         return {
             statusCode: 200,

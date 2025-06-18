@@ -170,3 +170,6 @@ server/app/.env
 
 # Local Netlify folder
 .netlify
+
+# Internal docs
+SUBSCRIPTION_DATABASE.md

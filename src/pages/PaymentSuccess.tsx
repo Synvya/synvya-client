@@ -49,7 +49,7 @@ const PaymentSuccess: React.FC = () => {
                 <NavHeader />
                 <div className="max-w-2xl mx-auto px-4 py-8">
                     <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9F7AEA] mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#49BB5B] mx-auto mb-4"></div>
                         <h2 className="text-2xl font-bold text-[#01013C] mb-2">
                             Verifying Payment...
                         </h2>

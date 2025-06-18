@@ -6,7 +6,9 @@ import PaymentPage from "./PaymentPage";
 import PaymentSuccess from "./PaymentSuccess";
 import PaymentWebhook from "./PaymentWebhook";
 import FormPage from "./FormPage";
+import OrdersPage from "./OrdersPage";
 import VisualizationPage from "./VisualizationPage";
+import SubscriptionAdmin from "./SubscriptionAdmin";
 import AuthGuard from "@/components/AuthGuard";
 import ExtensionCheck from "@/components/ExtensionCheck";
 
@@ -31,11 +33,17 @@ const Index = () => {
                 <FormPage />
               </AuthGuard>
             } />
+            <Route path="/orders" element={
+              <AuthGuard>
+                <OrdersPage />
+              </AuthGuard>
+            } />
             <Route path="/visualization" element={
               <AuthGuard>
                 <VisualizationPage />
               </AuthGuard>
             } />
+            <Route path="/admin/subscriptions" element={<SubscriptionAdmin />} />
           </Routes>
         </div>
       </ExtensionCheck>

@@ -24,7 +24,7 @@ export default {
 			},
 			colors: {
 				'synvya-primary': '#49BB5B',
-				'synvya-accent': '#9F7AEA',
+				'synvya-accent': '#49BB5B',
 				'synvya-neutral': '#F6F6F9',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

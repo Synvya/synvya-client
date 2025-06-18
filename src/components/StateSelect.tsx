@@ -70,7 +70,7 @@ const states = [
 const StateSelect: React.FC<StateSelectProps> = ({ value, onChange, className }) => {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className={`w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors ${className}`}>
+      <SelectTrigger className={`w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors ${className}`}>
         <SelectValue placeholder="Select a state" />
       </SelectTrigger>
       <SelectContent>

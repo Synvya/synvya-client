@@ -478,7 +478,7 @@ const FormPage: React.FC = () => {
         <div className="max-w-2xl mx-auto px-4 py-8">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9F7AEA] mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#49BB5B] mx-auto mb-4"></div>
               <p className="text-[#01013C]">Loading...</p>
             </div>
           </div>
@@ -534,7 +534,7 @@ const FormPage: React.FC = () => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors"
                   required
                 />
               </div>
@@ -547,7 +547,7 @@ const FormPage: React.FC = () => {
                   type="text"
                   value={formData.displayName}
                   onChange={(e) => handleInputChange('displayName', e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors"
                 />
               </div>
             </div>
@@ -560,7 +560,7 @@ const FormPage: React.FC = () => {
                 value={formData.about}
                 onChange={(e) => handleInputChange('about', e.target.value)}
                 rows={4}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors resize-none"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors resize-none"
                 placeholder="Tell us about your business..."
               />
             </div>
@@ -572,7 +572,7 @@ const FormPage: React.FC = () => {
               <select
                 value={formData.businessType}
                 onChange={(e) => handleInputChange('businessType', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors bg-white"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors bg-white"
                 required
               >
                 <option value="business">Business</option>
@@ -593,7 +593,7 @@ const FormPage: React.FC = () => {
                 type="text"
                 value={formData.street}
                 onChange={(e) => handleInputChange('street', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors"
                 placeholder="123 Main Street"
               />
             </div>
@@ -607,7 +607,7 @@ const FormPage: React.FC = () => {
                   type="text"
                   value={formData.city}
                   onChange={(e) => handleInputChange('city', e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors"
                   placeholder="New York"
                 />
               </div>
@@ -620,7 +620,7 @@ const FormPage: React.FC = () => {
                   type="text"
                   value={formData.zipCode}
                   onChange={(e) => handleInputChange('zipCode', e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors"
                   placeholder="10001"
                 />
               </div>
@@ -635,7 +635,7 @@ const FormPage: React.FC = () => {
                   <select
                     value={formData.state}
                     onChange={(e) => handleInputChange('state', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors bg-white"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors bg-white"
                   >
                     <option value="">Select a state...</option>
                     {US_STATES.map(state => (
@@ -647,7 +647,7 @@ const FormPage: React.FC = () => {
                     type="text"
                     value={formData.state}
                     onChange={(e) => handleInputChange('state', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors"
                     placeholder="State/Province"
                   />
                 )}
@@ -660,7 +660,7 @@ const FormPage: React.FC = () => {
                 <select
                   value={formData.country}
                   onChange={(e) => handleCountryChange(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors bg-white"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors bg-white"
                   required
                 >
                   {COUNTRIES.map(country => (
@@ -681,7 +681,7 @@ const FormPage: React.FC = () => {
                   value={formData.website}
                   onChange={(e) => handleWebsiteChange(e.target.value)}
                   onBlur={handleWebsiteBlur}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors"
                   placeholder="example.com or www.example.com"
                 />
               </div>
@@ -694,7 +694,7 @@ const FormPage: React.FC = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors"
                   placeholder="contact@example.com"
                 />
               </div>
@@ -708,7 +708,7 @@ const FormPage: React.FC = () => {
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors"
                 placeholder="+1 (555) 123-4567"
               />
             </div>
@@ -721,7 +721,7 @@ const FormPage: React.FC = () => {
                 type="text"
                 value={formData.categories}
                 onChange={(e) => handleInputChange('categories', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors"
                 placeholder="retail, electronics, gadgets"
               />
               <p className="text-sm text-gray-500 mt-1">Separate categories with commas</p>
@@ -737,7 +737,7 @@ const FormPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handlePopulateSquare}
-                  className="flex items-center justify-center px-4 py-3 border-2 border-gray-300 rounded-xl hover:border-[#9F7AEA] transition-colors text-gray-600"
+                  className="flex items-center justify-center px-4 py-3 border-2 border-gray-300 rounded-xl hover:border-[#49BB5B] transition-colors text-gray-600"
                   disabled
                 >
                   📊 Populate with Square
@@ -746,7 +746,7 @@ const FormPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handlePopulateShopify}
-                  className="flex items-center justify-center px-4 py-3 border-2 border-gray-300 rounded-xl hover:border-[#9F7AEA] transition-colors text-gray-600"
+                  className="flex items-center justify-center px-4 py-3 border-2 border-gray-300 rounded-xl hover:border-[#49BB5B] transition-colors text-gray-600"
                   disabled
                 >
                   🛍️ Populate with Shopify
@@ -770,7 +770,7 @@ const FormPage: React.FC = () => {
                       type="file"
                       accept="image/*"
                       onChange={(e) => handleFileChange('profilePicture', e.target.files?.[0] || null)}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#9F7AEA] file:text-white hover:file:bg-[#8B5CF6]"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#49BB5B] file:text-white hover:file:bg-[#3DA149]"
                     />
                     {formData.profilePicture ? (
                       <div className="relative">
@@ -812,7 +812,7 @@ const FormPage: React.FC = () => {
                       type="file"
                       accept="image/*"
                       onChange={(e) => handleFileChange('bannerPicture', e.target.files?.[0] || null)}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#9F7AEA] focus:outline-none transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#9F7AEA] file:text-white hover:file:bg-[#8B5CF6]"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#49BB5B] focus:outline-none transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#49BB5B] file:text-white hover:file:bg-[#3DA149]"
                     />
                     {formData.bannerPicture ? (
                       <div className="relative">
@@ -852,7 +852,7 @@ const FormPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading || !formData.name.trim()}
-                className="w-full bg-[#9F7AEA] text-white font-semibold py-4 px-6 rounded-xl hover:bg-[#8B5CF6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-[#49BB5B] text-white font-semibold py-4 px-6 rounded-xl hover:bg-[#3DA149] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
