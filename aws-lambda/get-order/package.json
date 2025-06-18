@@ -1,0 +1,10 @@
+{
+    "name": "synvya-check-subscription",
+    "version": "1.0.0",
+    "description": "Lambda function to check subscription validity",
+    "main": "index.js",
+    "type": "module",
+    "dependencies": {
+        "@aws-sdk/client-s3": "^3.0.0"
+    }
+}

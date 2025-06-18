@@ -53,7 +53,7 @@
             "Effect": "Allow",
             "Action": [
                 "s3:CreateBucket",
-                "s3:PutBucketEncryption",
+                "s3:PutEncryptionConfiguration",
                 "s3:PutBucketPublicAccessBlock",
                 "s3:PutObject",
                 "s3:GetObject",

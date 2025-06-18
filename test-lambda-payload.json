@@ -1,0 +1,12 @@
+{
+    "body": "{\"publicKey\":\"19ad1a2be7a7ab622d48d198c66abd3e05770f0b43ea9bab15045cb2b6d1dd1d\"}",
+    "httpMethod": "POST",
+    "headers": {
+        "Content-Type": "application/json"
+    },
+    "requestContext": {
+        "http": {
+            "method": "POST"
+        }
+    }
+}

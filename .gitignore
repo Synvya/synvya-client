@@ -157,6 +157,12 @@ server/app/.env
 !**/.env.example
 !**/.env.template
 
+# AWS Lambda build artifacts
+build/
+aws-lambda/*/node_modules/
+*.zip
+response.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

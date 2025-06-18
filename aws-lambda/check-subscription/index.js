@@ -11,7 +11,6 @@ const s3Client = new S3Client({
 
 /**
  * Load subscription data from S3
- * @returns {Object} Subscription data object
  */
 async function loadSubscriptionData() {
     try {
@@ -27,14 +26,14 @@ async function loadSubscriptionData() {
             return JSON.parse(data);
         } catch (error) {
             if (error.name === 'NoSuchKey') {
-                console.log('S3 subscription database not found, creating new one');
+                console.log('Subscription file does not exist, creating empty structure');
                 return { contacts: {} };
             }
             throw error;
         }
     } catch (error) {
         console.error('Error loading subscription data:', error);
-        throw new Error(`Failed to load subscription data: ${error.message}`);
+        throw error;
     }
 }
 
@@ -98,53 +97,93 @@ async function isSubscriptionValid(publicKey) {
  * This is the main function that AWS will call when someone visits your API
  */
 export const handler = async (event, context) => {
-    console.log('Event:', JSON.stringify(event, null, 2));
+    console.log('Lambda invoked with event:', JSON.stringify(event, null, 2));
 
-    // Handle CORS preflight - this allows web browsers to call your API
-    if (event.requestContext?.http?.method === 'OPTIONS') {
+    // Get HTTP method - Function URLs have different event structure
+    const httpMethod = event.requestContext?.http?.method || event.httpMethod || 'GET';
+
+    // Handle CORS preflight
+    if (httpMethod === 'OPTIONS') {
         return {
             statusCode: 200,
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
             },
             body: ''
         };
     }
 
-    // Only allow POST requests
-    if (event.requestContext?.http?.method !== 'POST') {
+    // Only allow POST requests  
+    if (httpMethod !== 'POST') {
         return {
             statusCode: 405,
             headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Content-Type': 'application/json'
+                'Access-Control-Allow-Origin': '*'
             },
             body: JSON.stringify({ error: 'Method not allowed' })
         };
     }
 
     try {
-        const { publicKey } = JSON.parse(event.body);
+        // Parse request body
+        let body;
+        try {
+            body = JSON.parse(event.body || '{}');
+        } catch (parseError) {
+            console.error('Error parsing request body:', parseError);
+            return {
+                statusCode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*'
+                },
+                body: JSON.stringify({ error: 'Invalid JSON in request body' })
+            };
+        }
+
+        const { publicKey } = body;
+        console.log('Checking subscription for publicKey:', publicKey);
 
         if (!publicKey) {
             return {
                 statusCode: 400,
                 headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Content-Type': 'application/json'
+                    'Access-Control-Allow-Origin': '*'
                 },
                 body: JSON.stringify({ error: 'Public key is required' })
             };
         }
 
-        console.log('Checking subscription validity for public key:', publicKey);
+        // Load subscription data
+        const data = await loadSubscriptionData();
+        const subscription = data.contacts?.[publicKey];
 
-        // Check subscription validity
-        const validationResult = await isSubscriptionValid(publicKey);
+        if (!subscription) {
+            console.log('No subscription found for publicKey:', publicKey);
+            return {
+                statusCode: 200,
+                headers: {
+                    'Access-Control-Allow-Origin': '*'
+                },
+                body: JSON.stringify({
+                    isValid: false,
+                    message: 'No subscription found'
+                })
+            };
+        }
 
-        console.log('Subscription validation result:', validationResult);
+        // Check if subscription is valid
+        const validThrough = new Date(subscription.validThrough);
+        const now = new Date();
+        const isValid = subscription.status === 'active' && validThrough > now;
+
+        console.log('Subscription check result:', {
+            publicKey,
+            status: subscription.status,
+            validThrough: subscription.validThrough,
+            isValid
+        });
 
         return {
             statusCode: 200,
@@ -153,26 +192,23 @@ export const handler = async (event, context) => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                isValid: validationResult.isValid,
-                reason: validationResult.reason,
-                subscription: validationResult.subscription,
-                daysRemaining: validationResult.daysRemaining,
-                validThrough: validationResult.subscription?.validThrough || null
+                isValid,
+                subscription: {
+                    status: subscription.status,
+                    validThrough: subscription.validThrough,
+                    planType: subscription.planType
+                }
             })
         };
 
     } catch (error) {
-        console.error('Function error:', error);
+        console.error('Error checking subscription:', error);
         return {
             statusCode: 500,
             headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Content-Type': 'application/json'
+                'Access-Control-Allow-Origin': '*'
             },
-            body: JSON.stringify({
-                error: 'Internal server error',
-                details: error.message
-            })
+            body: JSON.stringify({ error: 'Internal server error' })
         };
     }
 }; 
