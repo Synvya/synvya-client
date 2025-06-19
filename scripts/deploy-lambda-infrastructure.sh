@@ -36,6 +36,29 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_NAMED_IAM \
   --no-fail-on-empty-changeset
 
+# Update Lambda function code directly (CloudFormation doesn't auto-update from S3)
+echo "🔄 Updating Lambda function code..."
+LAMBDA_FUNCTIONS=(
+    "synvya-check-contact"
+    "synvya-check-subscription" 
+    "synvya-create-zaprite-order"
+    "synvya-get-order"
+    "synvya-get-user-orders"
+    "synvya-payment-webhook"
+)
+
+for func in "${LAMBDA_FUNCTIONS[@]}"; do
+    echo "  ↻ Updating $func..."
+    # Extract function name from full function name (remove synvya- prefix)
+    func_basename="${func#synvya-}"
+    
+    aws lambda update-function-code \
+        --function-name "$func" \
+        --s3-bucket "$S3_BUCKET" \
+        --s3-key "lambda-functions/${func_basename}.zip" \
+        --no-cli-pager || echo "⚠️ Failed to update $func (may not exist yet)"
+done
+
 # Get stack outputs
 echo "📋 Getting deployment outputs..."
 aws cloudformation describe-stacks \
