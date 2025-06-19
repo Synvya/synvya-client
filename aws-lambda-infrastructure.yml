@@ -294,9 +294,8 @@ Resources:
     Properties:
       Name: AddSecurityHeaders
       AutoPublish: true
-      FunctionCode: |
-        #!/usr/bin/env js
-        {{resolve:file://cloudfront-security-headers.js}}
+      FunctionCode: !Sub |
+        {{resolve:file:cloudfront-security-headers.js}}
 
 # Associate the security headers function with the distribution
   AddSecurityHeadersAssociation:
