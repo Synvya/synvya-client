@@ -96,18 +96,27 @@ export const handler = async (event, context) => {
         }
 
         const orderData = await response.json();
-        console.log('Order fetched successfully:', orderId);
+        console.log('Order data retrieved for:', orderId);
 
-        // Return order data
+        // Extract relevant fields for the orders table
+        const orderInfo = {
+            id: orderData.id,
+            paidAt: orderData.paidAt,
+            totalAmount: orderData.totalAmount,
+            currency: orderData.currency,
+            label: orderData.label,
+            receiptPdfUrl: orderData.receiptPdfUrl,
+            status: orderData.status
+        };
+
         return {
             statusCode: 200,
             headers: {
-                'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'GET'
+                'Access-Control-Allow-Methods': 'GET, OPTIONS'
             },
-            body: JSON.stringify(orderData)
+            body: JSON.stringify(orderInfo)
         };
 
     } catch (error) {

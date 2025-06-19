@@ -93,49 +93,85 @@ export const handler = async (event, context) => {
             };
         }
 
-        // Create contact first
-        console.log('Creating Zaprite contact...');
-        const contactBody = {
-            email: 'wedonotcollect@youremail.com',
-            legalName: publicKey
-        };
-        console.log('Request body:', JSON.stringify(contactBody));
+        // Step 1: Search for existing contact first
+        console.log('Searching for existing contact with public key:', publicKey);
 
-        const contactEndpoint = 'https://api.zaprite.com/v1/contact';
-        console.log('API endpoint:', contactEndpoint);
-
-        const contactResponse = await fetch(contactEndpoint, {
-            method: 'POST',
+        const searchResponse = await fetch(`https://api.zaprite.com/v1/contact?query=${encodeURIComponent(publicKey)}`, {
+            method: 'GET',
             headers: {
                 'Authorization': `Bearer ${zapriteApiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(contactBody)
+                'Content-Type': 'application/json',
+            }
         });
 
-        console.log('Response status:', contactResponse.status);
-        console.log('Response headers:', Object.fromEntries(contactResponse.headers.entries()));
+        const searchResponseData = await searchResponse.text();
 
-        if (!contactResponse.ok) {
-            const errorText = await contactResponse.text();
-            console.error('Contact creation failed:', contactResponse.status, errorText);
+        if (!searchResponse.ok) {
+            console.error('Zaprite Contact Search API error:', searchResponse.status, searchResponseData);
             return {
-                statusCode: 500,
+                statusCode: searchResponse.status,
                 headers: {
                     'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Headers': 'Content-Type',
                     'Access-Control-Allow-Methods': 'POST'
                 },
                 body: JSON.stringify({
-                    error: 'Failed to create contact',
-                    details: errorText,
-                    status: contactResponse.status
+                    error: `Zaprite Contact Search API error: ${searchResponse.status}`,
+                    details: searchResponseData
                 })
             };
         }
 
-        const contactResult = await contactResponse.json();
-        console.log('Contact created successfully:', contactResult.id);
+        const searchResult = JSON.parse(searchResponseData);
+        console.log('Contact search result:', searchResult);
+
+        let contactResult;
+
+        // Check if contact already exists
+        const existingContact = searchResult.items && searchResult.items.find(contact => contact.legalName === publicKey);
+
+        if (existingContact) {
+            console.log('Using existing contact:', existingContact);
+            contactResult = existingContact;
+        } else {
+            // Step 1b: Create a new contact if not found
+            const contactData = {
+                legalName: publicKey,
+                email: fixedEmail
+            };
+
+            console.log('Creating new Zaprite contact:', contactData);
+
+            const contactResponse = await fetch('https://api.zaprite.com/v1/contact', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${zapriteApiKey}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(contactData)
+            });
+
+            const contactResponseData = await contactResponse.text();
+
+            if (!contactResponse.ok) {
+                console.error('Zaprite Contact API error:', contactResponse.status, contactResponseData);
+                return {
+                    statusCode: contactResponse.status,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Headers': 'Content-Type',
+                        'Access-Control-Allow-Methods': 'POST'
+                    },
+                    body: JSON.stringify({
+                        error: `Zaprite Contact API error: ${contactResponse.status}`,
+                        details: contactResponseData
+                    })
+                };
+            }
+
+            contactResult = JSON.parse(contactResponseData);
+            console.log('New contact created successfully:', contactResult);
+        }
 
         // Step 2: Create order
         const planDetails = {
@@ -144,13 +180,23 @@ export const handler = async (event, context) => {
         };
 
         const plan = planDetails[planType];
-        const validThroughDate = new Date();
+
+        // Calculate valid-through date
+        const currentDate = new Date();
+        let validThroughDate;
+
         if (planType === 'monthly') {
+            // Add one month
+            validThroughDate = new Date(currentDate);
             validThroughDate.setMonth(validThroughDate.getMonth() + 1);
         } else {
+            // Add one year
+            validThroughDate = new Date(currentDate);
             validThroughDate.setFullYear(validThroughDate.getFullYear() + 1);
         }
-        const validThroughFormatted = validThroughDate.toISOString().split('T')[0];
+
+        // Format as DD-MM-YYYY
+        const validThroughFormatted = `${validThroughDate.getDate().toString().padStart(2, '0')}-${(validThroughDate.getMonth() + 1).toString().padStart(2, '0')}-${validThroughDate.getFullYear()}`;
 
         console.log('Creating Zaprite order...');
         const orderBody = {
