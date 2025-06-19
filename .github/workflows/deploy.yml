@@ -83,70 +83,15 @@ jobs:
           echo "lambda_changed=false" >> $GITHUB_OUTPUT
         fi
 
-    - name: Create scripts directory
+    - name: Make deployment scripts executable
       if: steps.lambda-changes.outputs.lambda_changed == 'true'
-      run: mkdir -p scripts
+      run: chmod +x scripts/*.sh
 
-    - name: Build and deploy Lambda functions
+    - name: Deploy Lambda functions using deployment script
       if: steps.lambda-changes.outputs.lambda_changed == 'true'
       env:
         ZAPRITE_API_KEY: ${{ secrets.ZAPRITE_API_KEY }}
-      run: |
-        # Build Lambda functions
-        echo "🔨 Building Lambda functions..."
-        mkdir -p build/lambda-functions
-        
-        # Function to build a single Lambda function
-        build_function() {
-            local function_name=$1
-            echo "📦 Building $function_name..."
-            
-            # Create temporary directory
-            local temp_dir="build/temp-$function_name"
-            mkdir -p "$temp_dir"
-            
-            # Copy function code and shared library
-            cp -r "aws-lambda/$function_name"/* "$temp_dir/"
-            cp -r "aws-lambda/lib" "$temp_dir/"
-            
-            # Install dependencies
-            cd "$temp_dir"
-            npm install --production
-            
-            # Create zip file
-            zip -r "../lambda-functions/$function_name.zip" . -x "*.git*" "*.DS_Store*"
-            
-            # Return to root
-            cd ../../..
-            
-            # Clean up temp directory
-            rm -rf "$temp_dir"
-            
-            echo "✅ Built $function_name"
-        }
-        
-        # Build all functions
-        build_function "check-subscription"
-        build_function "create-zaprite-order"
-        build_function "payment-webhook"
-        build_function "get-order"
-        build_function "get-user-orders"
-        build_function "check-contact"
-        
-        # Upload Lambda function packages to S3
-        echo "⬆️ Uploading Lambda functions to S3..."
-        aws s3 sync build/lambda-functions/ s3://$LAMBDA_S3_BUCKET/lambda-functions/ --delete
-        
-        # Deploy CloudFormation stack
-        echo "☁️ Deploying Lambda infrastructure..."
-        aws cloudformation deploy \
-            --template-file aws-lambda-infrastructure.yml \
-            --stack-name $LAMBDA_STACK_NAME \
-            --parameter-overrides \
-                ZapriteApiKey="$ZAPRITE_API_KEY" \
-                S3BucketName="$LAMBDA_S3_BUCKET" \
-            --capabilities CAPABILITY_NAMED_IAM \
-            --no-fail-on-empty-changeset
+      run: ./scripts/deploy-lambda-infrastructure.sh
 
     - name: Build frontend
       run: |
@@ -172,14 +117,4 @@ jobs:
     - name: Invalidate index.html
       run: aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/index.html"
 
-    # -----------------------------------------------------
-    # Output Lambda URLs for reference
-    # -----------------------------------------------------
-    - name: Output Lambda Function URLs
-      if: steps.lambda-changes.outputs.lambda_changed == 'true'
-      run: |
-        echo "🔗 Lambda Function URLs:"
-        aws cloudformation describe-stacks \
-          --stack-name $LAMBDA_STACK_NAME \
-          --query 'Stacks[0].Outputs[?contains(OutputKey, `Url`)].{Function:OutputKey,URL:OutputValue}' \
-          --output table
+    # Lambda URLs are output by the deployment script

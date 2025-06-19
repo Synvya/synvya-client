@@ -51,6 +51,25 @@ aws cloudformation describe-stacks \
     --query 'Stacks[0].Outputs[?contains(OutputKey, `Url`)].{Function:OutputKey,URL:OutputValue}' \
     --output table
 
+# Update the edge security headers function directly
+echo "☁️ Updating CloudFront AddSecurityHeaders function…"
+aws cloudfront update-function \
+  --name AddSecurityHeaders \
+  --function-code fileb://cloudfront-security-headers.js
+
+# Publish the new version
+echo "📢 Publishing new CloudFront function version..."
+ETAG=$(aws cloudfront get-function \
+         --name AddSecurityHeaders \
+         --stage LIVE \
+         --query 'ETag' \
+         --output text)
+aws cloudfront publish-function \
+  --name AddSecurityHeaders \
+  --if-match "$ETAG"
+
+echo "✅ CloudFront security headers function updated successfully"
+
 echo ""
 echo "📝 Next steps:"
 echo "1. Update your frontend to use the new Lambda URLs instead of Netlify functions"
