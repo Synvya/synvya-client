@@ -15,7 +15,7 @@ function handler(event) {
             "https://r7sts256fb7qrwouximz3x2q6y0yroyx.lambda-url.us-east-1.on.aws/ " +
             "https://trfdrrplkdsjo3kynxuprpfnre0pxklc.lambda-url.us-east-1.on.aws/ " +
             "https://ynbxffgyxiqun476l2oa27qyma0neved.lambda-url.us-east-1.on.aws/ " +
-            "https://w3ttcgeoojib2wi3ymbzafekfa0cdfmc.lambda-url.us-east-1.on.aws/ " +
+            "https://msuv6n37lgdw3tlu2ptm5xpsea0rqqoe.lambda-url.us-east-1.on.aws/ " +
             "https://tkrxeipv25uhrl7vea7h2rijgy0duzvo.lambda-url.us-east-1.on.aws/",
 
             // 3️⃣  External images (nostr.build + blossom.band) and in-page <img src="data:...">

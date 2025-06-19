@@ -102,7 +102,19 @@ export const handler = async (event, context) => {
     // Get HTTP method - Function URLs have different event structure
     const httpMethod = event.requestContext?.http?.method || event.httpMethod || 'GET';
 
-
+    // Handle CORS preflight requests
+    if (httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Max-Age': '86400' // Cache preflight for 24 hours
+            },
+            body: ''
+        };
+    }
 
     // Only allow POST requests  
     if (httpMethod !== 'POST') {
@@ -111,7 +123,7 @@ export const handler = async (event, context) => {
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST'
+                'Access-Control-Allow-Methods': 'POST, OPTIONS'
             },
             body: JSON.stringify({ error: 'Method not allowed' })
         };
@@ -129,7 +141,7 @@ export const handler = async (event, context) => {
                 headers: {
                     'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Headers': 'Content-Type',
-                    'Access-Control-Allow-Methods': 'POST'
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS'
                 },
                 body: JSON.stringify({ error: 'Invalid JSON in request body' })
             };
@@ -144,7 +156,7 @@ export const handler = async (event, context) => {
                 headers: {
                     'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Headers': 'Content-Type',
-                    'Access-Control-Allow-Methods': 'POST'
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS'
                 },
                 body: JSON.stringify({ error: 'Public key is required' })
             };
@@ -162,7 +174,7 @@ export const handler = async (event, context) => {
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Headers': 'Content-Type',
-                    'Access-Control-Allow-Methods': 'POST'
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS'
                 },
                 body: JSON.stringify({
                     isValid: false,
@@ -189,7 +201,7 @@ export const handler = async (event, context) => {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST'
+                'Access-Control-Allow-Methods': 'POST, OPTIONS'
             },
             body: JSON.stringify({
                 isValid,
@@ -208,7 +220,7 @@ export const handler = async (event, context) => {
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST'
+                'Access-Control-Allow-Methods': 'POST, OPTIONS'
             },
             body: JSON.stringify({ error: 'Internal server error' })
         };

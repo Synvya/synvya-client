@@ -1,6 +1,23 @@
 export const handler = async (event, context) => {
+    // Get HTTP method - Function URLs have different event structure
+    const httpMethod = event.requestContext?.http?.method || event.httpMethod || 'GET';
+
+    // Handle CORS preflight requests
+    if (httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                'Access-Control-Max-Age': '86400' // Cache preflight for 24 hours
+            },
+            body: ''
+        };
+    }
+
     // Only allow GET requests
-    if (event.requestContext.http.method !== 'GET') {
+    if (httpMethod !== 'GET') {
         return {
             statusCode: 405,
             headers: {

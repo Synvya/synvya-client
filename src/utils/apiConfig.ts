@@ -3,14 +3,14 @@
 //
 // MIGRATION NOTES:
 // - Production now uses AWS Lambda Function URLs instead of Netlify Functions
-// - Function URLs are loaded via /runtime-env.js which sets window.SYNVYA_CFG
+// - Function URLs are loaded via /runtime-env.js which sets window.runtimeEnv
 // - Local development still uses Netlify dev server (localhost:8888)
 // - All 6 functions have been migrated: checkSubscription, createZapriteOrder, 
 //   paymentWebhook, getOrder, getUserOrders, checkContact
 
 declare global {
     interface Window {
-        SYNVYA_CFG?: {
+        runtimeEnv?: {
             paymentWebhookUrl?: string;
             getOrderUrl?: string;
             getUserOrdersUrl?: string;
@@ -40,9 +40,9 @@ export const getApiUrls = () => {
     }
 
     // Production - use Lambda function URLs from runtime config
-    const config = window.SYNVYA_CFG;
+    const config = window.runtimeEnv;
     if (!config) {
-        console.warn('SYNVYA_CFG not found, falling back to local URLs');
+        console.warn('runtimeEnv not found, falling back to local URLs');
         return LOCAL_URLS;
     }
 

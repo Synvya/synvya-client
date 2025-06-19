@@ -1,8 +1,25 @@
 import { getSubscription, updateSubscription } from './lib/subscription-db.js';
 
 export const handler = async (event, context) => {
+    // Get HTTP method - Function URLs have different event structure
+    const httpMethod = event.requestContext?.http?.method || event.httpMethod || 'GET';
+
+    // Handle CORS preflight requests
+    if (httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Max-Age': '86400' // Cache preflight for 24 hours
+            },
+            body: ''
+        };
+    }
+
     // Only allow POST requests
-    if (event.requestContext.http.method !== 'POST') {
+    if (httpMethod !== 'POST') {
         return {
             statusCode: 405,
             headers: {
