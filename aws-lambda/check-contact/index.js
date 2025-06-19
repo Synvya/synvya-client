@@ -61,7 +61,7 @@ export const handler = async (event, context) => {
 
         // Check if contact exists in Zaprite
         console.log('Checking contact in Zaprite for email:', email);
-        const response = await fetch(`https://api.zaprite.com/v1/contacts?email=${encodeURIComponent(email)}`, {
+        const response = await fetch(`https://api.zaprite.com/v1/contact?email=${encodeURIComponent(email)}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${zapriteApiKey}`,
