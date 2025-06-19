@@ -283,22 +283,8 @@ Resources:
       Principal:          "*"
       FunctionUrlAuthType: NONE
 
-# ---------------------------------------------------------------------------
-# CloudFront Function: AddSecurityHeaders
-# ---------------------------------------------------------------------------
-  AddSecurityHeadersFunction:
-    Type: AWS::CloudFront::Function
-    Properties:
-      Name: AddSecurityHeaders
-      AutoPublish: true
-      FunctionConfig:
-        Comment: "Add security headers to responses"
-        Runtime: cloudfront-js-2.0
-      FunctionCode: !Sub |
-        {{resolve:file:cloudfront-security-headers.js}}
-
-# CloudFront Function association is handled manually in deployment script
-# because AWS::CloudFront::FunctionAssociation is not a valid resource type
+# CloudFront Function is managed manually in AWS Console
+# The AddSecurityHeaders function already exists and is associated with the distribution
 
 # ---------------------------------------------------------------------------
 # Outputs
