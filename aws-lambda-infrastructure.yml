@@ -1,91 +1,77 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Lambda functions and S3 database for Synvya subscription system
+Description: >
+  Synvya – six Lambda functions + Function URLs
+  Uses an existing encrypted S3 bucket as its JSON “database”.
 
+# ---------------------------------------------------------------------------
+# Parameters
+# ---------------------------------------------------------------------------
 Parameters:
   ZapriteApiKey:
     Type: String
-    Description: Zaprite API key for payment processing
     NoEcho: true
+    Description: Zaprite API key passed to the Zaprite functions
   S3BucketName:
     Type: String
     Default: synvya-subscriptions-prod
-    Description: S3 bucket name for subscription database
+    Description: Name of the pre-existing S3 bucket that stores the database
   CloudFrontDistributionId:
     Type: String
     Default: E3DPPDWMXK3MAD
-    Description: CloudFront distribution ID to update
+    Description: (Reserved for future use)
+  LambdaExecutionRoleArn:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: "/synvya/lambda-execution-role-arn"
 
+# ---------------------------------------------------------------------------
+# Resources
+# ---------------------------------------------------------------------------
 Resources:
-  # S3 Bucket for subscription database
-  SubscriptionDatabase:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Ref S3BucketName
-      VersioningConfiguration:
-        Status: Enabled
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-            BucketKeyEnabled: true
 
-  # IAM Role for Lambda functions
+# ---------------------------------------------------------------------------
+# Execution role for all functions
+# ---------------------------------------------------------------------------
   LambdaExecutionRole:
     Type: AWS::IAM::Role
+    DeletionPolicy: Retain
     Properties:
-      RoleName: synvya-lambda-execution-role
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
+            Principal: { Service: lambda.amazonaws.com }
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-        - PolicyName: S3DatabaseAccess
+        - PolicyName: S3Access
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action:
+                Action: 
                   - s3:GetObject
                   - s3:PutObject
-                Resource: !Sub "${SubscriptionDatabase}/*"
+                Resource: !Sub "arn:aws:s3:::${S3BucketName}/*"
 
-  # Lambda Layer for shared dependencies
-  SharedLibraryLayer:
-    Type: AWS::Lambda::LayerVersion
-    Properties:
-      LayerName: synvya-shared-libs
-      Description: Shared libraries for Synvya Lambda functions
-      Content:
-        S3Bucket: !Ref S3BucketName
-        S3Key: layers/shared-libs.zip
-      CompatibleRuntimes:
-        - nodejs20.x
 
-  # Lambda Functions
+
+# ---------------------------------------------------------------------------
+# Lambda: check-subscription
+# ---------------------------------------------------------------------------
   CheckSubscriptionFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: synvya-check-subscription
       Runtime: nodejs20.x
       Handler: index.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
+      Role: !Ref LambdaExecutionRoleArn
       Code:
         S3Bucket: !Ref S3BucketName
-        S3Key: lambda-functions/check-subscription.zip
+        S3Key:   lambda-functions/check-subscription.zip
       Environment:
         Variables:
           SUBSCRIPTION_DB_BUCKET: !Ref S3BucketName
-          AWS_REGION: !Ref AWS::Region
       Timeout: 30
 
   CheckSubscriptionUrl:
@@ -95,39 +81,36 @@ Resources:
       AuthType: NONE
       Cors:
         AllowCredentials: false
-        AllowHeaders:
-          - Content-Type
-        AllowMethods:
-          - GET
-          - POST
-          - OPTIONS
-        AllowOrigins:
-          - "*"
+        AllowOrigins: ["*"]
+        AllowHeaders: ["Content-Type"]
+        AllowMethods: ["GET", "POST"]
         MaxAge: 86400
 
   CheckSubscriptionUrlPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref CheckSubscriptionFunction
-      Action: lambda:InvokeFunctionUrl
-      Principal: "*"
+      FunctionName:       !Ref CheckSubscriptionFunction
+      Action:             lambda:InvokeFunctionUrl
+      Principal:          "*"
       FunctionUrlAuthType: NONE
 
+# ---------------------------------------------------------------------------
+# Lambda: create-zaprite-order
+# ---------------------------------------------------------------------------
   CreateZapriteOrderFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: synvya-create-zaprite-order
       Runtime: nodejs20.x
       Handler: index.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
+      Role: !Ref LambdaExecutionRoleArn
       Code:
         S3Bucket: !Ref S3BucketName
-        S3Key: lambda-functions/create-zaprite-order.zip
+        S3Key:   lambda-functions/create-zaprite-order.zip
       Environment:
         Variables:
           SUBSCRIPTION_DB_BUCKET: !Ref S3BucketName
-          AWS_REGION: !Ref AWS::Region
-          ZAPRITE_API_KEY: !Ref ZapriteApiKey
+          ZAPRITE_API_KEY:       !Ref ZapriteApiKey
       Timeout: 60
 
   CreateZapriteOrderUrl:
@@ -137,37 +120,35 @@ Resources:
       AuthType: NONE
       Cors:
         AllowCredentials: false
-        AllowHeaders:
-          - Content-Type
-        AllowMethods:
-          - POST
-          - OPTIONS
-        AllowOrigins:
-          - "*"
+        AllowOrigins: ["*"]
+        AllowHeaders: ["Content-Type"]
+        AllowMethods: ["POST"]
         MaxAge: 86400
 
   CreateZapriteOrderUrlPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref CreateZapriteOrderFunction
-      Action: lambda:InvokeFunctionUrl
-      Principal: "*"
+      FunctionName:       !Ref CreateZapriteOrderFunction
+      Action:             lambda:InvokeFunctionUrl
+      Principal:          "*"
       FunctionUrlAuthType: NONE
 
+# ---------------------------------------------------------------------------
+# Lambda: payment-webhook
+# ---------------------------------------------------------------------------
   PaymentWebhookFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: synvya-payment-webhook
       Runtime: nodejs20.x
       Handler: index.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
+      Role: !Ref LambdaExecutionRoleArn
       Code:
         S3Bucket: !Ref S3BucketName
-        S3Key: lambda-functions/payment-webhook.zip
+        S3Key:   lambda-functions/payment-webhook.zip
       Environment:
         Variables:
           SUBSCRIPTION_DB_BUCKET: !Ref S3BucketName
-          AWS_REGION: !Ref AWS::Region
       Timeout: 30
 
   PaymentWebhookUrl:
@@ -177,37 +158,35 @@ Resources:
       AuthType: NONE
       Cors:
         AllowCredentials: false
-        AllowHeaders:
-          - Content-Type
-        AllowMethods:
-          - POST
-          - OPTIONS
-        AllowOrigins:
-          - "*"
+        AllowOrigins: ["*"]
+        AllowHeaders: ["Content-Type"]
+        AllowMethods: ["POST"]
         MaxAge: 86400
 
   PaymentWebhookUrlPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref PaymentWebhookFunction
-      Action: lambda:InvokeFunctionUrl
-      Principal: "*"
+      FunctionName:       !Ref PaymentWebhookFunction
+      Action:             lambda:InvokeFunctionUrl
+      Principal:          "*"
       FunctionUrlAuthType: NONE
 
+# ---------------------------------------------------------------------------
+# Lambda: get-order
+# ---------------------------------------------------------------------------
   GetOrderFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: synvya-get-order
       Runtime: nodejs20.x
       Handler: index.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
+      Role: !Ref LambdaExecutionRoleArn
       Code:
         S3Bucket: !Ref S3BucketName
-        S3Key: lambda-functions/get-order.zip
+        S3Key:   lambda-functions/get-order.zip
       Environment:
         Variables:
           ZAPRITE_API_KEY: !Ref ZapriteApiKey
-          AWS_REGION: !Ref AWS::Region
       Timeout: 30
 
   GetOrderUrl:
@@ -217,37 +196,35 @@ Resources:
       AuthType: NONE
       Cors:
         AllowCredentials: false
-        AllowHeaders:
-          - Content-Type
-        AllowMethods:
-          - GET
-          - OPTIONS
-        AllowOrigins:
-          - "*"
+        AllowOrigins: ["*"]
+        AllowHeaders: ["Content-Type"]
+        AllowMethods: ["GET"]
         MaxAge: 86400
 
   GetOrderUrlPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref GetOrderFunction
-      Action: lambda:InvokeFunctionUrl
-      Principal: "*"
+      FunctionName:       !Ref GetOrderFunction
+      Action:             lambda:InvokeFunctionUrl
+      Principal:          "*"
       FunctionUrlAuthType: NONE
 
+# ---------------------------------------------------------------------------
+# Lambda: get-user-orders
+# ---------------------------------------------------------------------------
   GetUserOrdersFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: synvya-get-user-orders
       Runtime: nodejs20.x
       Handler: index.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
+      Role: !Ref LambdaExecutionRoleArn
       Code:
         S3Bucket: !Ref S3BucketName
-        S3Key: lambda-functions/get-user-orders.zip
+        S3Key:   lambda-functions/get-user-orders.zip
       Environment:
         Variables:
           SUBSCRIPTION_DB_BUCKET: !Ref S3BucketName
-          AWS_REGION: !Ref AWS::Region
       Timeout: 30
 
   GetUserOrdersUrl:
@@ -257,37 +234,35 @@ Resources:
       AuthType: NONE
       Cors:
         AllowCredentials: false
-        AllowHeaders:
-          - Content-Type
-        AllowMethods:
-          - GET
-          - OPTIONS
-        AllowOrigins:
-          - "*"
+        AllowOrigins: ["*"]
+        AllowHeaders: ["Content-Type"]
+        AllowMethods: ["GET"]
         MaxAge: 86400
 
   GetUserOrdersUrlPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref GetUserOrdersFunction
-      Action: lambda:InvokeFunctionUrl
-      Principal: "*"
+      FunctionName:       !Ref GetUserOrdersFunction
+      Action:             lambda:InvokeFunctionUrl
+      Principal:          "*"
       FunctionUrlAuthType: NONE
 
+# ---------------------------------------------------------------------------
+# Lambda: check-contact
+# ---------------------------------------------------------------------------
   CheckContactFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: synvya-check-contact
       Runtime: nodejs20.x
       Handler: index.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
+      Role: !Ref LambdaExecutionRoleArn
       Code:
         S3Bucket: !Ref S3BucketName
-        S3Key: lambda-functions/check-contact.zip
+        S3Key:   lambda-functions/check-contact.zip
       Environment:
         Variables:
           ZAPRITE_API_KEY: !Ref ZapriteApiKey
-          AWS_REGION: !Ref AWS::Region
       Timeout: 30
 
   CheckContactUrl:
@@ -297,48 +272,44 @@ Resources:
       AuthType: NONE
       Cors:
         AllowCredentials: false
-        AllowHeaders:
-          - Content-Type
-        AllowMethods:
-          - POST
-          - OPTIONS
-        AllowOrigins:
-          - "*"
+        AllowOrigins: ["*"]
+        AllowHeaders: ["Content-Type"]
+        AllowMethods: ["POST"]
         MaxAge: 86400
 
   CheckContactUrlPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref CheckContactFunction
-      Action: lambda:InvokeFunctionUrl
-      Principal: "*"
+      FunctionName:       !Ref CheckContactFunction
+      Action:             lambda:InvokeFunctionUrl
+      Principal:          "*"
       FunctionUrlAuthType: NONE
 
+# ---------------------------------------------------------------------------
+# Outputs
+# ---------------------------------------------------------------------------
 Outputs:
-  SubscriptionDatabaseBucket:
-    Description: S3 bucket for subscription database
-    Value: !Ref SubscriptionDatabase
 
   CheckSubscriptionUrl:
-    Description: URL for check-subscription function
+    Description: URL for check-subscription
     Value: !GetAtt CheckSubscriptionUrl.FunctionUrl
 
   CreateZapriteOrderUrl:
-    Description: URL for create-zaprite-order function
+    Description: URL for create-zaprite-order
     Value: !GetAtt CreateZapriteOrderUrl.FunctionUrl
 
   PaymentWebhookUrl:
-    Description: URL for payment-webhook function
+    Description: URL for payment-webhook
     Value: !GetAtt PaymentWebhookUrl.FunctionUrl
 
   GetOrderUrl:
-    Description: URL for get-order function
+    Description: URL for get-order
     Value: !GetAtt GetOrderUrl.FunctionUrl
 
   GetUserOrdersUrl:
-    Description: URL for get-user-orders function
+    Description: URL for get-user-orders
     Value: !GetAtt GetUserOrdersUrl.FunctionUrl
 
   CheckContactUrl:
-    Description: URL for check-contact function
-    Value: !GetAtt CheckContactUrl.FunctionUrl 
+    Description: URL for check-contact
+    Value: !GetAtt CheckContactUrl.FunctionUrl

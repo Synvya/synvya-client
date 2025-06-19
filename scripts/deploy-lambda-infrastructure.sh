@@ -7,6 +7,7 @@ set -e
 STACK_NAME="synvya-lambda-infrastructure"
 S3_BUCKET="synvya-subscriptions-prod"
 ZAPRITE_API_KEY="${ZAPRITE_API_KEY}"
+TEMPLATE_FILE="$(pwd)/aws-lambda-infrastructure.yml"
 
 echo "🚀 Deploying Synvya Lambda Infrastructure..."
 
@@ -25,16 +26,15 @@ echo "📦 Building Lambda functions..."
 echo "⬆️ Uploading Lambda functions to S3..."
 aws s3 sync build/lambda-functions/ s3://$S3_BUCKET/lambda-functions/ --delete
 
-# Deploy CloudFormation stack
 echo "☁️ Deploying CloudFormation stack..."
 aws cloudformation deploy \
-    --template-file aws-lambda-infrastructure.yml \
-    --stack-name $STACK_NAME \
-    --parameter-overrides \
-        ZapriteApiKey="$ZAPRITE_API_KEY" \
-        S3BucketName="$S3_BUCKET" \
-    --capabilities CAPABILITY_NAMED_IAM \
-    --no-fail-on-empty-changeset
+  --stack-name "$STACK_NAME" \
+  --template-file "$TEMPLATE_FILE" \
+  --parameter-overrides \
+    ZapriteApiKey="$ZAPRITE_API_KEY" \
+    S3BucketName="$S3_BUCKET" \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --no-fail-on-empty-changeset
 
 # Get stack outputs
 echo "📋 Getting deployment outputs..."
@@ -55,4 +55,4 @@ echo ""
 echo "📝 Next steps:"
 echo "1. Update your frontend to use the new Lambda URLs instead of Netlify functions"
 echo "2. Update Zaprite webhook URL to point to the PaymentWebhookUrl"
-echo "3. Test all functionality to ensure everything works correctly" 
+echo "3. Test all functionality to ensure everything works correctly"

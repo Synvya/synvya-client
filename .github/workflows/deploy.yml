@@ -42,10 +42,9 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: npm
 
-    - name: Install deps & build frontend
+    - name: Install deps
       run: |
         npm ci
-        npm run build
 
     # -----------------------------------------------------
     # Auth to AWS via OIDC
@@ -55,6 +54,22 @@ jobs:
       with:
         role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}   # ❹
         aws-region: ${{ env.AWS_REGION }}
+
+    - name: Generate runtime-env.js
+      env:
+        STACK_NAME: ${{ env.LAMBDA_STACK_NAME }}
+      run: |
+        mkdir -p public
+        echo "window.SYNVYA_CFG = {" > public/runtime-env.js
+        aws cloudformation describe-stacks \
+          --stack-name "$STACK_NAME" \
+          --query "Stacks[0].Outputs[?ends_with(OutputKey,'Url')].[OutputKey,OutputValue]" \
+          --output text \
+        | while read KEY VALUE; do
+            JSKEY="$(tr '[:upper:]' '[:lower:]' <<< ${KEY:0:1})${KEY:1}"
+            echo "  $JSKEY: \"$VALUE\"," >> public/runtime-env.js
+          done
+        echo "};" >> public/runtime-env.js
 
     # -----------------------------------------------------
     # Deploy Lambda Functions (only if Lambda code changed)
@@ -132,6 +147,11 @@ jobs:
                 S3BucketName="$LAMBDA_S3_BUCKET" \
             --capabilities CAPABILITY_NAMED_IAM \
             --no-fail-on-empty-changeset
+
+    - name: Build frontend
+      if: steps.lambda-changes.outputs.lambda_changed == 'true'
+      run: |
+        npm run build
 
     # -----------------------------------------------------
     # Upload hashed assets (1 year cache) and index.html (60 s)
