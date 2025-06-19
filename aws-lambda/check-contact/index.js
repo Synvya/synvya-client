@@ -31,9 +31,9 @@ export const handler = async (event, context) => {
 
     try {
         const body = JSON.parse(event.body || '{}');
-        const { email } = body;
+        const { publicKey } = body;
 
-        if (!email) {
+        if (!publicKey) {
             return {
                 statusCode: 400,
                 headers: {
@@ -41,7 +41,7 @@ export const handler = async (event, context) => {
                     'Access-Control-Allow-Headers': 'Content-Type',
                     'Access-Control-Allow-Methods': 'POST'
                 },
-                body: JSON.stringify({ error: 'Email is required' })
+                body: JSON.stringify({ error: 'Public key is required' })
             };
         }
 
@@ -59,9 +59,13 @@ export const handler = async (event, context) => {
             };
         }
 
-        // Check if contact exists in Zaprite
-        console.log('Checking contact in Zaprite for email:', email);
-        const response = await fetch(`https://api.zaprite.com/v1/contact?email=${encodeURIComponent(email)}`, {
+        console.log('Checking for existing contact with public key:', publicKey);
+
+        // Search for contact by query (will search across multiple fields including legalName)
+        // We filter results afterwards to only match contacts where legalName exactly equals the public key
+        const contactSearchUrl = `https://api.zaprite.com/v1/contact?query=${encodeURIComponent(publicKey)}`;
+
+        const response = await fetch(contactSearchUrl, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${zapriteApiKey}`,
@@ -71,22 +75,20 @@ export const handler = async (event, context) => {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Failed to check contact:', errorText);
-            return {
-                statusCode: 500,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                    'Access-Control-Allow-Methods': 'POST'
-                },
-                body: JSON.stringify({ error: 'Failed to check contact' })
-            };
+            console.error('Zaprite API error:', response.status, errorText);
+            throw new Error(`Zaprite API error: ${response.status}`);
         }
 
-        const contactData = await response.json();
-        const contactExists = contactData && contactData.length > 0;
+        const searchResult = await response.json();
+        console.log('Contact search result:', searchResult);
 
-        console.log('Contact check result:', contactExists);
+        // Check if any contact has the public key as legalName
+        const existingContact = searchResult.items.find(contact =>
+            contact.legalName === publicKey
+        );
+
+        const contactExists = !!existingContact;
+        console.log('Contact exists:', contactExists);
 
         return {
             statusCode: 200,
@@ -94,11 +96,11 @@ export const handler = async (event, context) => {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST'
+                'Access-Control-Allow-Methods': 'POST, OPTIONS'
             },
             body: JSON.stringify({
                 exists: contactExists,
-                contact: contactExists ? contactData[0] : null
+                contact: existingContact || null
             })
         };
 
@@ -111,7 +113,10 @@ export const handler = async (event, context) => {
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Allow-Methods': 'POST'
             },
-            body: JSON.stringify({ error: 'Internal server error' })
+            body: JSON.stringify({
+                error: 'Failed to check contact',
+                details: error.message
+            })
         };
     }
 }; 
