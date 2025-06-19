@@ -60,7 +60,7 @@ jobs:
         STACK_NAME: ${{ env.LAMBDA_STACK_NAME }}
       run: |
         mkdir -p public
-        echo "window.SYNVYA_CFG = {" > public/runtime-env.js
+        echo "window.runtimeEnv = {" > public/runtime-env.js
         aws cloudformation describe-stacks \
           --stack-name "$STACK_NAME" \
           --query "Stacks[0].Outputs[?ends_with(OutputKey,'Url')].[OutputKey,OutputValue]" \
