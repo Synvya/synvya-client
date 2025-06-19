@@ -1,18 +1,15 @@
 import { getSubscription, updateSubscription } from './lib/subscription-db.js';
 
 export const handler = async (event, context) => {
-    // CORS is handled by Function URL configuration
-    if (event.requestContext.http.method === 'OPTIONS') {
-        return {
-            statusCode: 200,
-            body: ''
-        };
-    }
-
     // Only allow POST requests
     if (event.requestContext.http.method !== 'POST') {
         return {
             statusCode: 405,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'POST'
+            },
             body: JSON.stringify({ error: 'Method not allowed' })
         };
     }
@@ -26,6 +23,11 @@ export const handler = async (event, context) => {
             console.log('Invalid webhook data - missing eventType or orderId');
             return {
                 statusCode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST'
+                },
                 body: JSON.stringify({ error: 'Invalid webhook data' })
             };
         }
@@ -35,6 +37,12 @@ export const handler = async (event, context) => {
             console.log('Ignoring non-complete order event:', body.eventType);
             return {
                 statusCode: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST'
+                },
                 body: JSON.stringify({ message: 'Event ignored' })
             };
         }
@@ -59,6 +67,11 @@ export const handler = async (event, context) => {
             console.log('No subscription found for order:', orderId);
             return {
                 statusCode: 404,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST'
+                },
                 body: JSON.stringify({ error: 'Subscription not found' })
             };
         }
@@ -88,7 +101,10 @@ export const handler = async (event, context) => {
         return {
             statusCode: 200,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'POST'
             },
             body: JSON.stringify({
                 message: 'Webhook processed successfully',
@@ -101,6 +117,11 @@ export const handler = async (event, context) => {
         console.error('Webhook processing error:', error);
         return {
             statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'POST'
+            },
             body: JSON.stringify({ error: 'Internal server error' })
         };
     }

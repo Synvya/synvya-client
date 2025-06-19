@@ -109,12 +109,6 @@ Resources:
     Properties:
       TargetFunctionArn: !GetAtt CreateZapriteOrderFunction.Arn
       AuthType: NONE
-      Cors:
-        AllowCredentials: false
-        AllowOrigins: ["*"]
-        AllowHeaders: ["Content-Type"]
-        AllowMethods: ["POST"]
-        MaxAge: 86400
 
   CreateZapriteOrderUrlPermission:
     Type: AWS::Lambda::Permission
@@ -147,12 +141,6 @@ Resources:
     Properties:
       TargetFunctionArn: !GetAtt PaymentWebhookFunction.Arn
       AuthType: NONE
-      Cors:
-        AllowCredentials: false
-        AllowOrigins: ["*"]
-        AllowHeaders: ["Content-Type"]
-        AllowMethods: ["POST"]
-        MaxAge: 86400
 
   PaymentWebhookUrlPermission:
     Type: AWS::Lambda::Permission
@@ -185,12 +173,6 @@ Resources:
     Properties:
       TargetFunctionArn: !GetAtt GetOrderFunction.Arn
       AuthType: NONE
-      Cors:
-        AllowCredentials: false
-        AllowOrigins: ["*"]
-        AllowHeaders: ["Content-Type"]
-        AllowMethods: ["GET"]
-        MaxAge: 86400
 
   GetOrderUrlPermission:
     Type: AWS::Lambda::Permission
@@ -223,12 +205,6 @@ Resources:
     Properties:
       TargetFunctionArn: !GetAtt GetUserOrdersFunction.Arn
       AuthType: NONE
-      Cors:
-        AllowCredentials: false
-        AllowOrigins: ["*"]
-        AllowHeaders: ["Content-Type"]
-        AllowMethods: ["GET"]
-        MaxAge: 86400
 
   GetUserOrdersUrlPermission:
     Type: AWS::Lambda::Permission
@@ -261,12 +237,6 @@ Resources:
     Properties:
       TargetFunctionArn: !GetAtt CheckContactFunction.Arn
       AuthType: NONE
-      Cors:
-        AllowCredentials: false
-        AllowOrigins: ["*"]
-        AllowHeaders: ["Content-Type"]
-        AllowMethods: ["POST"]
-        MaxAge: 86400
 
 
   CheckContactUrlPermission:
