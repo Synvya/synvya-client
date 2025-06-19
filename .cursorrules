@@ -1,0 +1,18 @@
+# API Documentation
+Our project uses the Zaprite API. The OpenAPI specification is located at:e
+- File: ./docs/zaprite-openapi-spec.json
+
+# Local vs Cloud deployment 
+The local deployment uses netlify functions and the cloud deployment uses lambda functions. 
+The netlify functions have been functionally tested. The lambda functions must replicate the
+same logic. Do not create new logic for the lambda functions.
+
+The deployment (local or on AWS) shall always use one source of truth for scripts and configuration that will be stored in scripts under the folder ./scripts and configuration files under the folder ./config. 
+
+Automation files like GitHub Action files should use these scripts and configuration files instead of recreating the logic contained in the scripts or hardcoding the configuration in the GitHub Action file. 
+
+# User identification
+- The user is identified by the public key in hex format supplied by the NIP-07 compatible
+browser extension. The public key in hex format is used as the Zaprite API Contact `legalName` value.
+- Zaprite Contacts require an email. We do not collect emails from customers so all contacts will have the same email address "wedonotcollect@youremail.com". 
+- To search for a contact, we only search using the public key in hex format. 

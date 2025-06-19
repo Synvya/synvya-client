@@ -60,7 +60,7 @@ export const handler = async (event, context) => {
 
         // Fetch order from Zaprite API
         console.log('Fetching order from Zaprite:', orderId);
-        const response = await fetch(`https://api.zaprite.com/v1/orders/${orderId}`, {
+        const response = await fetch(`https://api.zaprite.com/v1/order/${orderId}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${zapriteApiKey}`,
