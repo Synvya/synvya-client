@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useNostrAuth } from '@/contexts/NostrAuthContext';
 import { nostrService } from '@/lib/nostr';
+import { getApiUrl } from '@/utils/apiConfig';
 
 interface ExtensionCheckProps {
     children: React.ReactNode;
@@ -84,12 +85,8 @@ const ExtensionCheck: React.FC<ExtensionCheckProps> = ({ children }) => {
                     return;
                 }
 
-                // Check if user has active subscription
-                // Use Netlify dev server URL for local development
-                const isLocalhost = window.location.hostname === 'localhost';
-                const functionUrl = isLocalhost
-                    ? 'http://localhost:8888/.netlify/functions/check-subscription'
-                    : '/.netlify/functions/check-subscription';
+                // Check if user has active subscription using API configuration utility
+                const functionUrl = getApiUrl('checkSubscription');
 
                 const response = await fetch(functionUrl, {
                     method: 'POST',

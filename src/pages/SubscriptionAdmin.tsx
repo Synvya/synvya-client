@@ -57,8 +57,8 @@ const SubscriptionAdmin: React.FC = () => {
                         <div className="space-y-6">
                             {/* Status Overview */}
                             <div className={`p-6 rounded-xl border-2 ${hasValidSubscription(subscription)
-                                    ? 'border-green-200 bg-green-50'
-                                    : 'border-red-200 bg-red-50'
+                                ? 'border-green-200 bg-green-50'
+                                : 'border-red-200 bg-red-50'
                                 }`}>
                                 <h2 className="text-xl font-semibold text-[#01013C] mb-2">
                                     Subscription Status
@@ -97,8 +97,8 @@ const SubscriptionAdmin: React.FC = () => {
                                         <div>
                                             <label className="text-sm font-medium text-gray-600">Status</label>
                                             <p className={`text-sm p-2 rounded border capitalize font-medium ${subscription.subscription.status === 'active' ? 'bg-green-100 text-green-800' :
-                                                    subscription.subscription.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-red-100 text-red-800'
+                                                subscription.subscription.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                    'bg-red-100 text-red-800'
                                                 }`}>
                                                 {subscription.subscription.status}
                                             </p>
@@ -112,8 +112,8 @@ const SubscriptionAdmin: React.FC = () => {
                                         <div>
                                             <label className="text-sm font-medium text-gray-600">Days Remaining</label>
                                             <p className={`text-sm p-2 rounded border font-medium ${subscription.daysRemaining > 7 ? 'bg-green-100 text-green-800' :
-                                                    subscription.daysRemaining > 0 ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-red-100 text-red-800'
+                                                subscription.daysRemaining > 0 ? 'bg-yellow-100 text-yellow-800' :
+                                                    'bg-red-100 text-red-800'
                                                 }`}>
                                                 {subscription.daysRemaining} days
                                             </p>
@@ -152,8 +152,8 @@ const SubscriptionAdmin: React.FC = () => {
                             Testing Instructions
                         </h3>
                         <ul className="text-sm text-blue-800 space-y-1">
-                            <li>• In development, subscription data is stored in <code>netlify/functions/data/subscriptions.json</code></li>
-                            <li>• In production, data is stored encrypted in S3</li>
+                            <li>• In development, subscription data is stored locally in Netlify functions</li>
+                            <li>• In production, data is stored encrypted in AWS S3</li>
                             <li>• Create test subscriptions by going through the payment flow</li>
                             <li>• Use this page to verify subscription data is being saved correctly</li>
                         </ul>

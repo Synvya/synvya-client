@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useNostrAuth } from '@/contexts/NostrAuthContext';
 import NavHeader from '@/components/NavHeader';
 import PrimaryButton from '@/components/PrimaryButton';
+import { getApiUrl } from '@/utils/apiConfig';
 
 
 const PaymentPage: React.FC = () => {
@@ -45,10 +46,8 @@ const PaymentPage: React.FC = () => {
             throw new Error('Public key not available');
         }
 
-        // Use serverless function to avoid CORS issues
-        const endpoint = import.meta.env.DEV
-            ? 'http://localhost:8888/.netlify/functions/create-zaprite-order'  // Local development (Netlify dev server)
-            : '/.netlify/functions/create-zaprite-order'; // Production
+        // Use the API configuration utility to get the correct endpoint
+        const endpoint = getApiUrl('createZapriteOrder');
 
         console.log('Creating Zaprite order via serverless function...');
 

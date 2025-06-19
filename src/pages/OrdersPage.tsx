@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNostrAuth } from '@/contexts/NostrAuthContext';
 import NavHeader from '@/components/NavHeader';
+import { getApiUrl } from '@/utils/apiConfig';
 
 interface OrderInfo {
     id: string;
@@ -17,7 +18,7 @@ const OrdersPage: React.FC = () => {
     const navigate = useNavigate();
     const { isAuthenticated, publicKey, isLoading: authLoading } = useNostrAuth();
     const [orders, setOrders] = useState<OrderInfo[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // Redirect if not authenticated
@@ -39,12 +40,8 @@ const OrdersPage: React.FC = () => {
             setIsLoading(true);
             setError(null);
 
-            // Step 1: Get the list of order IDs for this user
-            // Use Netlify dev server URL for local development
-            const isLocalhost = window.location.hostname === 'localhost';
-            const functionUrl = isLocalhost
-                ? 'http://localhost:8888/.netlify/functions/get-user-orders'
-                : '/.netlify/functions/get-user-orders';
+            // Step 1: Get the list of order IDs for this user using API configuration utility
+            const functionUrl = getApiUrl('getUserOrders');
 
             const orderIdsResponse = await fetch(functionUrl, {
                 method: 'POST',
@@ -67,11 +64,9 @@ const OrdersPage: React.FC = () => {
                 return;
             }
 
-            // Step 2: Fetch detailed information for each order
+            // Step 2: Fetch detailed information for each order using API configuration utility
             const orderPromises = orderIds.map(async (orderId: string) => {
-                const orderUrl = isLocalhost
-                    ? `http://localhost:8888/.netlify/functions/get-order?orderId=${orderId}`
-                    : `/.netlify/functions/get-order?orderId=${orderId}`;
+                const orderUrl = `${getApiUrl('getOrder')}?orderId=${orderId}`;
 
                 const orderResponse = await fetch(orderUrl);
                 if (orderResponse.ok) {
