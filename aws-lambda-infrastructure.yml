@@ -277,6 +277,7 @@ Resources:
         AllowMethods: ["POST"]
         MaxAge: 86400
 
+
   CheckContactUrlPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -284,6 +285,27 @@ Resources:
       Action:             lambda:InvokeFunctionUrl
       Principal:          "*"
       FunctionUrlAuthType: NONE
+
+# ---------------------------------------------------------------------------
+# CloudFront Function: AddSecurityHeaders
+# ---------------------------------------------------------------------------
+  AddSecurityHeadersFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: AddSecurityHeaders
+      AutoPublish: true
+      FunctionCode: |
+        #!/usr/bin/env js
+        {{resolve:file://cloudfront-security-headers.js}}
+
+# Associate the security headers function with the distribution
+  AddSecurityHeadersAssociation:
+    Type: AWS::CloudFront::FunctionAssociation
+    Properties:
+      DistributionId: !Ref CloudFrontDistributionId
+      EventType: viewer-response
+      FunctionARN: !GetAtt AddSecurityHeadersFunction.FunctionARN
+      Stage: LIVE
 
 # ---------------------------------------------------------------------------
 # Outputs
