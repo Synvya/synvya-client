@@ -1,13 +1,8 @@
 export const handler = async (event, context) => {
-    // Handle CORS preflight
+    // CORS is handled by Function URL configuration
     if (event.requestContext.http.method === 'OPTIONS') {
         return {
             statusCode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS'
-            },
             body: ''
         };
     }
@@ -16,9 +11,6 @@ export const handler = async (event, context) => {
     if (event.requestContext.http.method !== 'POST') {
         return {
             statusCode: 405,
-            headers: {
-                'Access-Control-Allow-Origin': '*'
-            },
             body: JSON.stringify({ error: 'Method not allowed' })
         };
     }
@@ -30,9 +22,6 @@ export const handler = async (event, context) => {
         if (!email) {
             return {
                 statusCode: 400,
-                headers: {
-                    'Access-Control-Allow-Origin': '*'
-                },
                 body: JSON.stringify({ error: 'Email is required' })
             };
         }
@@ -42,9 +31,6 @@ export const handler = async (event, context) => {
         if (!zapriteApiKey) {
             return {
                 statusCode: 500,
-                headers: {
-                    'Access-Control-Allow-Origin': '*'
-                },
                 body: JSON.stringify({ error: 'Zaprite API key not configured' })
             };
         }
@@ -64,9 +50,6 @@ export const handler = async (event, context) => {
             console.error('Failed to check contact:', errorText);
             return {
                 statusCode: 500,
-                headers: {
-                    'Access-Control-Allow-Origin': '*'
-                },
                 body: JSON.stringify({ error: 'Failed to check contact' })
             };
         }
@@ -79,7 +62,6 @@ export const handler = async (event, context) => {
         return {
             statusCode: 200,
             headers: {
-                'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -92,9 +74,6 @@ export const handler = async (event, context) => {
         console.error('Error checking contact:', error);
         return {
             statusCode: 500,
-            headers: {
-                'Access-Control-Allow-Origin': '*'
-            },
             body: JSON.stringify({ error: 'Internal server error' })
         };
     }

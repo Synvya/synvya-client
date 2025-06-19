@@ -1,15 +1,10 @@
 import { updateSubscription } from './lib/subscription-db.js';
 
 export const handler = async (event, context) => {
-    // Handle CORS preflight
+    // CORS is handled by Function URL configuration
     if (event.requestContext.http.method === 'OPTIONS') {
         return {
             statusCode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS'
-            },
             body: ''
         };
     }
@@ -18,9 +13,6 @@ export const handler = async (event, context) => {
     if (event.requestContext.http.method !== 'POST') {
         return {
             statusCode: 405,
-            headers: {
-                'Access-Control-Allow-Origin': '*'
-            },
             body: JSON.stringify({ error: 'Method not allowed' })
         };
     }
@@ -33,9 +25,6 @@ export const handler = async (event, context) => {
         if (!publicKey) {
             return {
                 statusCode: 400,
-                headers: {
-                    'Access-Control-Allow-Origin': '*'
-                },
                 body: JSON.stringify({ error: 'Public key is required' })
             };
         }
@@ -43,9 +32,6 @@ export const handler = async (event, context) => {
         if (!planType || !['monthly', 'annual'].includes(planType)) {
             return {
                 statusCode: 400,
-                headers: {
-                    'Access-Control-Allow-Origin': '*'
-                },
                 body: JSON.stringify({ error: 'Valid plan type is required (monthly or annual)' })
             };
         }
@@ -56,9 +42,6 @@ export const handler = async (event, context) => {
         if (!zapriteApiKey) {
             return {
                 statusCode: 500,
-                headers: {
-                    'Access-Control-Allow-Origin': '*'
-                },
                 body: JSON.stringify({ error: 'Zaprite API key not configured' })
             };
         }
@@ -82,9 +65,6 @@ export const handler = async (event, context) => {
             console.error('Contact creation failed:', errorText);
             return {
                 statusCode: 500,
-                headers: {
-                    'Access-Control-Allow-Origin': '*'
-                },
                 body: JSON.stringify({ error: 'Failed to create contact' })
             };
         }
@@ -128,9 +108,6 @@ export const handler = async (event, context) => {
             console.error('Order creation failed:', errorText);
             return {
                 statusCode: 500,
-                headers: {
-                    'Access-Control-Allow-Origin': '*'
-                },
                 body: JSON.stringify({ error: 'Failed to create order' })
             };
         }
@@ -157,7 +134,7 @@ export const handler = async (event, context) => {
         return {
             statusCode: 200,
             headers: {
-                'Access-Control-Allow-Origin': '*'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 orderId: orderResult.id,
@@ -171,9 +148,6 @@ export const handler = async (event, context) => {
         console.error('Unexpected error:', error);
         return {
             statusCode: 500,
-            headers: {
-                'Access-Control-Allow-Origin': '*'
-            },
             body: JSON.stringify({ error: 'Internal server error' })
         };
     }
