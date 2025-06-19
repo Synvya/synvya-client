@@ -15,10 +15,7 @@ Parameters:
     Type: String
     Default: synvya-subscriptions-prod
     Description: Name of the pre-existing S3 bucket that stores the database
-  CloudFrontDistributionId:
-    Type: String
-    Default: E3DPPDWMXK3MAD
-    Description: (Reserved for future use)
+
   LambdaExecutionRoleArn:
     Type: AWS::SSM::Parameter::Value<String>
     Default: "/synvya/lambda-execution-role-arn"
@@ -297,14 +294,8 @@ Resources:
       FunctionCode: !Sub |
         {{resolve:file:cloudfront-security-headers.js}}
 
-# Associate the security headers function with the distribution
-  AddSecurityHeadersAssociation:
-    Type: AWS::CloudFront::FunctionAssociation
-    Properties:
-      DistributionId: !Ref CloudFrontDistributionId
-      EventType: viewer-response
-      FunctionARN: !GetAtt AddSecurityHeadersFunction.FunctionARN
-      Stage: LIVE
+# CloudFront Function association is handled manually in deployment script
+# because AWS::CloudFront::FunctionAssociation is not a valid resource type
 
 # ---------------------------------------------------------------------------
 # Outputs
