@@ -149,7 +149,6 @@ jobs:
             --no-fail-on-empty-changeset
 
     - name: Build frontend
-      if: steps.lambda-changes.outputs.lambda_changed == 'true'
       run: |
         npm run build
 
