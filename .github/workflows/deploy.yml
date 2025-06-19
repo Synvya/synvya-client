@@ -55,20 +55,28 @@ jobs:
         role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}   # ❹
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Generate runtime-env.js
+    - name: Generate runtime-env.js with correct Lambda URLs
       env:
         STACK_NAME: ${{ env.LAMBDA_STACK_NAME }}
       run: |
         mkdir -p public
         echo "window.runtimeEnv = {" > public/runtime-env.js
-        aws cloudformation describe-stacks \
-          --stack-name "$STACK_NAME" \
-          --query "Stacks[0].Outputs[?ends_with(OutputKey,'Url')].[OutputKey,OutputValue]" \
-          --output text \
-        | while read KEY VALUE; do
-            JSKEY="$(tr '[:upper:]' '[:lower:]' <<< ${KEY:0:1})${KEY:1}"
-            echo "  $JSKEY: \"$VALUE\"," >> public/runtime-env.js
-          done
+        
+        # Note: CloudFormation outputs may contain outdated URLs if functions were manually recreated
+        # The working URLs (as of the last manual verification) are:
+        # - checkSubscriptionUrl: https://si4pgos4rx3nykzya2y5ugcp6a0vwgdj.lambda-url.us-east-1.on.aws/
+        # - createZapriteOrderUrl: https://r7sts256fb7qrwouximz3x2q6y0yroyx.lambda-url.us-east-1.on.aws/
+        # - paymentWebhookUrl: https://trfdrrplkdsjo3kynxuprpfnre0pxklc.lambda-url.us-east-1.on.aws/
+        # - getOrderUrl: https://ynbxffgyxiqun476l2oa27qyma0neved.lambda-url.us-east-1.on.aws/
+        # - getUserOrdersUrl: https://msuv6n37lgdw3tlu2ptm5xpsea0rqqoe.lambda-url.us-east-1.on.aws/
+        # - checkContactUrl: https://tkrxeipv25uhrl7vea7h2rijgy0duzvo.lambda-url.us-east-1.on.aws/
+        
+        echo "  checkSubscriptionUrl: \"https://si4pgos4rx3nykzya2y5ugcp6a0vwgdj.lambda-url.us-east-1.on.aws/\"," >> public/runtime-env.js
+        echo "  createZapriteOrderUrl: \"https://r7sts256fb7qrwouximz3x2q6y0yroyx.lambda-url.us-east-1.on.aws/\"," >> public/runtime-env.js
+        echo "  paymentWebhookUrl: \"https://trfdrrplkdsjo3kynxuprpfnre0pxklc.lambda-url.us-east-1.on.aws/\"," >> public/runtime-env.js
+        echo "  getOrderUrl: \"https://ynbxffgyxiqun476l2oa27qyma0neved.lambda-url.us-east-1.on.aws/\"," >> public/runtime-env.js
+        echo "  getUserOrdersUrl: \"https://msuv6n37lgdw3tlu2ptm5xpsea0rqqoe.lambda-url.us-east-1.on.aws/\"," >> public/runtime-env.js
+        echo "  checkContactUrl: \"https://tkrxeipv25uhrl7vea7h2rijgy0duzvo.lambda-url.us-east-1.on.aws/\"" >> public/runtime-env.js
         echo "};" >> public/runtime-env.js
 
     # -----------------------------------------------------
@@ -104,6 +112,8 @@ jobs:
     - name: Build frontend
       run: |
         npm run build
+        # Copy runtime-env.js to the build output
+        cp public/runtime-env.js $BUILD_DIR/runtime-env.js
 
     # -----------------------------------------------------
     # Upload hashed assets (1 year cache) and index.html (60 s)
@@ -122,7 +132,21 @@ jobs:
     # -----------------------------------------------------
     # Bust CloudFront cache for index.html only
     # -----------------------------------------------------
-    - name: Invalidate index.html
-      run: aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/index.html"
+    - name: Update CloudFront security headers function
+      run: |
+        # Update the CloudFront function with latest security headers
+        aws cloudfront update-function \
+          --name synvya-security-headers \
+          --function-config Comment="Security headers for client.synvya.com with correct Lambda URLs",Runtime=cloudfront-js-1.0 \
+          --function-code fileb://cloudfront-security-headers.js
+
+        # Publish the updated function
+        ETAG=$(aws cloudfront describe-function --name synvya-security-headers --query 'ETag' --output text)
+        aws cloudfront publish-function --name synvya-security-headers --if-match "$ETAG"
+
+    - name: Invalidate CloudFront cache
+      run: |
+        # Invalidate both index.html and runtime-env.js to ensure latest configuration is served
+        aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/index.html" "/runtime-env.js"
 
     # Lambda URLs are output by the deployment script
