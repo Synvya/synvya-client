@@ -102,18 +102,17 @@ export const handler = async (event, context) => {
     // Get HTTP method - Function URLs have different event structure
     const httpMethod = event.requestContext?.http?.method || event.httpMethod || 'GET';
 
-    // CORS is handled by Function URL configuration
-    if (httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 200,
-            body: ''
-        };
-    }
+
 
     // Only allow POST requests  
     if (httpMethod !== 'POST') {
         return {
             statusCode: 405,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'POST'
+            },
             body: JSON.stringify({ error: 'Method not allowed' })
         };
     }
@@ -127,6 +126,11 @@ export const handler = async (event, context) => {
             console.error('Error parsing request body:', parseError);
             return {
                 statusCode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST'
+                },
                 body: JSON.stringify({ error: 'Invalid JSON in request body' })
             };
         }
@@ -137,6 +141,11 @@ export const handler = async (event, context) => {
         if (!publicKey) {
             return {
                 statusCode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST'
+                },
                 body: JSON.stringify({ error: 'Public key is required' })
             };
         }
@@ -149,6 +158,12 @@ export const handler = async (event, context) => {
             console.log('No subscription found for publicKey:', publicKey);
             return {
                 statusCode: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST'
+                },
                 body: JSON.stringify({
                     isValid: false,
                     message: 'No subscription found'
@@ -171,7 +186,10 @@ export const handler = async (event, context) => {
         return {
             statusCode: 200,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'POST'
             },
             body: JSON.stringify({
                 isValid,
@@ -187,6 +205,11 @@ export const handler = async (event, context) => {
         console.error('Error checking subscription:', error);
         return {
             statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'POST'
+            },
             body: JSON.stringify({ error: 'Internal server error' })
         };
     }

@@ -76,12 +76,6 @@ Resources:
     Properties:
       TargetFunctionArn: !GetAtt CheckSubscriptionFunction.Arn
       AuthType: NONE
-      Cors:
-        AllowCredentials: false
-        AllowOrigins: ["*"]
-        AllowHeaders: ["Content-Type"]
-        AllowMethods: ["GET", "POST"]
-        MaxAge: 86400
 
   CheckSubscriptionUrlPermission:
     Type: AWS::Lambda::Permission
