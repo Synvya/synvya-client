@@ -38,7 +38,7 @@ function handler(event) {
         ].join("; ")
     };
 
-    // Additional security headers
+    // Additional security headers just in case
     headers['strict-transport-security'] = { value: 'max-age=63072000; includeSubdomains; preload' };
     headers['x-content-type-options'] = { value: 'nosniff' };
     headers['x-frame-options'] = { value: 'DENY' };
