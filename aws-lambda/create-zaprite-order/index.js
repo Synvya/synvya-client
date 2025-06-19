@@ -58,23 +58,33 @@ export const handler = async (event, context) => {
             };
         }
 
+        console.log('API key present:', !!zapriteApiKey, 'Length:', zapriteApiKey?.length);
+        console.log('API key prefix:', zapriteApiKey?.substring(0, 8) + '...');
+
         // Step 1: Create contact with fixed email
         console.log('Creating Zaprite contact...');
+        const requestBody = {
+            email: fixedEmail,
+            name: `User ${publicKey.substring(0, 8)}`
+        };
+        console.log('Request body:', JSON.stringify(requestBody));
+        console.log('API endpoint:', 'https://api.zaprite.com/v1/contacts');
+
         const contactResponse = await fetch('https://api.zaprite.com/v1/contacts', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${zapriteApiKey}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                email: fixedEmail,
-                name: `User ${publicKey.substring(0, 8)}`
-            })
+            body: JSON.stringify(requestBody)
         });
+
+        console.log('Response status:', contactResponse.status);
+        console.log('Response headers:', Object.fromEntries(contactResponse.headers.entries()));
 
         if (!contactResponse.ok) {
             const errorText = await contactResponse.text();
-            console.error('Contact creation failed:', errorText);
+            console.error('Contact creation failed:', contactResponse.status, errorText);
             return {
                 statusCode: 500,
                 headers: {
@@ -82,7 +92,11 @@ export const handler = async (event, context) => {
                     'Access-Control-Allow-Headers': 'Content-Type',
                     'Access-Control-Allow-Methods': 'POST'
                 },
-                body: JSON.stringify({ error: 'Failed to create contact' })
+                body: JSON.stringify({
+                    error: 'Failed to create contact',
+                    details: errorText,
+                    status: contactResponse.status
+                })
             };
         }
 
