@@ -291,6 +291,9 @@ Resources:
     Properties:
       Name: AddSecurityHeaders
       AutoPublish: true
+      FunctionConfig:
+        Comment: "Add security headers to responses"
+        Runtime: cloudfront-js-2.0
       FunctionCode: !Sub |
         {{resolve:file:cloudfront-security-headers.js}}
 
