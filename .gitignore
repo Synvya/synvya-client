@@ -24,7 +24,9 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Python lib directories (but not aws-lambda/lib)
+/**/lib/
+!aws-lambda/lib/
 lib64/
 parts/
 sdist/
