@@ -53,20 +53,33 @@ aws cloudformation describe-stacks \
 
 # Update the edge security headers function directly
 echo "☁️ Updating CloudFront AddSecurityHeaders function…"
-aws cloudfront update-function \
-  --name AddSecurityHeaders \
-  --function-code fileb://cloudfront-security-headers.js
 
-# Publish the new version
+# Get the current ETag for the function from DEVELOPMENT stage
+CURRENT_ETAG=$(aws cloudfront describe-function \
+    --name AddSecurityHeaders \
+    --stage DEVELOPMENT \
+    --query 'ETag' \
+    --output text)
+
+# Update the function code
+aws cloudfront update-function \
+    --name AddSecurityHeaders \
+    --if-match "$CURRENT_ETAG" \
+    --function-config Comment="Add security headers to responses",Runtime="cloudfront-js-2.0" \
+    --function-code fileb://cloudfront-security-headers.js
+
+# Get the new ETag after update for publishing
 echo "📢 Publishing new CloudFront function version..."
-ETAG=$(aws cloudfront get-function \
-         --name AddSecurityHeaders \
-         --stage LIVE \
-         --query 'ETag' \
-         --output text)
+NEW_ETAG=$(aws cloudfront describe-function \
+    --name AddSecurityHeaders \
+    --stage DEVELOPMENT \
+    --query 'ETag' \
+    --output text)
+
+# Publish the new version to LIVE
 aws cloudfront publish-function \
-  --name AddSecurityHeaders \
-  --if-match "$ETAG"
+    --name AddSecurityHeaders \
+    --if-match "$NEW_ETAG"
 
 echo "✅ CloudFront security headers function updated successfully"
 
