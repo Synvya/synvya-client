@@ -1,4 +1,4 @@
-import { getSubscription, updateSubscription } from '../lib/subscription-db.js';
+import { getSubscription, updateSubscription } from './lib/subscription-db.js';
 
 export const handler = async (event, context) => {
     // Handle CORS preflight
@@ -128,6 +128,6 @@ export const handler = async (event, context) => {
 
 // Helper function to get all subscriptions (we need to import this)
 async function getAllSubscriptions() {
-    const { getAllSubscriptions: getAll } = await import('../lib/subscription-db.js');
+    const { getAllSubscriptions: getAll } = await import('./lib/subscription-db.js');
     return await getAll();
 } 
