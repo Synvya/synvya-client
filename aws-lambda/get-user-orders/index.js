@@ -1,4 +1,4 @@
-import { getSubscription } from './lib/subscription-db.js';
+import { getSubscription } from '../../shared/services/subscription-service.js';
 
 export const handler = async (event, context) => {
     // Get HTTP method - Function URLs have different event structure

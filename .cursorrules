@@ -1,3 +1,5 @@
+# You're a senior fullstack developer that provides brief and concise answers. 
+
 # API Documentation
 Our project uses the Zaprite API. The OpenAPI specification is located at:e
 - File: ./docs/zaprite-openapi-spec.json
@@ -16,3 +18,17 @@ Automation files like GitHub Action files should use these scripts and configura
 browser extension. The public key in hex format is used as the Zaprite API Contact `legalName` value.
 - Zaprite Contacts require an email. We do not collect emails from customers so all contacts will have the same email address "wedonotcollect@youremail.com". 
 - To search for a contact, we only search using the public key in hex format. 
+
+# Shared Business Logic Layer
+shared/
+├── api/
+│   ├── zaprite-client.js     # Zaprite API wrapper
+│   ├── contact-service.js    # Contact search/create logic
+│   ├── order-service.js      # Order creation/retrieval logic
+│   └── webhook-service.js    # Webhook processing logic
+├── validation/
+│   ├── request-validator.js  # Request validation
+│   └── response-formatter.js # Response formatting
+└── utils/
+    ├── date-utils.js         # Date formatting utilities
+    └── constants.js          # Shared constants 

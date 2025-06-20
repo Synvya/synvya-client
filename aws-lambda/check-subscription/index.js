@@ -1,4 +1,4 @@
-import { isSubscriptionValid, getSubscription } from '../lib/subscription-db.js';
+import { isSubscriptionValid, getSubscription } from '../../shared/services/subscription-service.js';
 
 /**
  * AWS Lambda handler
