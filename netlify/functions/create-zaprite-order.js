@@ -1,4 +1,4 @@
-import { updateSubscription } from './lib/subscription-db.js';
+import { updateSubscription } from '../../shared/services/subscription-service.js';
 
 export const handler = async (event, context) => {
     // Handle CORS preflight

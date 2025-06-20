@@ -1,4 +1,4 @@
-import { updateSubscription, getSubscription } from './lib/subscription-db.js';
+import { updateSubscription, getSubscription } from '../../shared/services/subscription-service.js';
 
 export const handler = async (event, context) => {
     // Only allow POST requests
