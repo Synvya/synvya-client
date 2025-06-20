@@ -96,11 +96,8 @@ const SubscriptionAdmin: React.FC = () => {
                                         </div>
                                         <div>
                                             <label className="text-sm font-medium text-gray-600">Status</label>
-                                            <p className={`text-sm p-2 rounded border capitalize font-medium ${subscription.subscription.status === 'active' ? 'bg-green-100 text-green-800' :
-                                                subscription.subscription.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                    'bg-red-100 text-red-800'
-                                                }`}>
-                                                {subscription.subscription.status}
+                                            <p className={`text-sm p-2 rounded border capitalize font-medium ${subscription.isValid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                {subscription.isValid ? 'Active' : 'Expired'}
                                             </p>
                                         </div>
                                         <div>

@@ -93,7 +93,7 @@ export const useSubscription = (publicKey?: string): UseSubscriptionReturn => {
 
 // Helper function to check if user has valid subscription
 export const hasValidSubscription = (subscription: SubscriptionValidation | null): boolean => {
-    return subscription?.isValid === true && subscription?.subscription?.status === 'active';
+    return subscription?.isValid === true;
 };
 
 // Helper function to get subscription status message
@@ -108,16 +108,8 @@ export const getSubscriptionStatusMessage = (subscription: SubscriptionValidatio
 
     const { isValid, reason, subscription: subData, daysRemaining } = subscription;
 
-    if (isValid && subData.status === 'active') {
+    if (isValid) {
         return `Active subscription (${daysRemaining} days remaining)`;
-    }
-
-    if (subData.status === 'pending') {
-        return 'Subscription payment pending';
-    }
-
-    if (subData.status === 'cancelled') {
-        return 'Subscription cancelled';
     }
 
     if (!isValid) {

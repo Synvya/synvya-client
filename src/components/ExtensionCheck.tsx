@@ -104,7 +104,7 @@ const ExtensionCheck: React.FC<ExtensionCheckProps> = ({ children }) => {
                 console.log('ExtensionCheck: Subscription check result:', result);
 
                 // Cache the result (using exists field for consistency with existing cache structure)
-                const hasActiveSubscription = result.isValid && result.subscription?.status === 'active';
+                const hasActiveSubscription = result.isValid;
                 subscriptionCheckCache.current.set(publicKey, {
                     exists: hasActiveSubscription,
                     timestamp: Date.now()
