@@ -1,35 +1,58 @@
 import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 // Configuration
+const IS_LOCAL = process.env.NETLIFY_DEV === 'true' || (process.env.NODE_ENV !== 'production' && !process.env.AWS_REGION);
 const S3_BUCKET = process.env.SUBSCRIPTION_DB_BUCKET || 'synvya-subscriptions-prod';
 const S3_KEY = 'subscriptions.json';
+const LOCAL_DB_PATH = path.join(process.cwd(), 'netlify', 'functions', 'data', 'subscriptions.json');
 
-// Initialize S3 client
-const s3Client = new S3Client({
-    region: process.env.AWS_REGION || 'us-east-1'
-});
+// Initialize S3 client for production
+let s3Client;
+if (!IS_LOCAL) {
+    s3Client = new S3Client({
+        region: process.env.AWS_REGION || 'us-east-1'
+    });
+}
 
 /**
- * Load subscription data from S3
+ * Load subscription data from storage (local file or S3)
  */
 async function loadSubscriptionData() {
     try {
-        console.log('Loading subscription data from S3:', S3_BUCKET, S3_KEY);
-        const command = new GetObjectCommand({
-            Bucket: S3_BUCKET,
-            Key: S3_KEY,
-        });
-
-        try {
-            const response = await s3Client.send(command);
-            const data = await response.Body.transformToString();
-            return JSON.parse(data);
-        } catch (error) {
-            if (error.name === 'NoSuchKey') {
-                console.log('Subscription file does not exist, creating empty structure');
-                return { contacts: {} };
+        if (IS_LOCAL) {
+            // Local file system for Netlify dev
+            console.log('Loading subscription data from local file:', LOCAL_DB_PATH);
+            try {
+                const data = await fs.readFile(LOCAL_DB_PATH, 'utf8');
+                return JSON.parse(data);
+            } catch (error) {
+                if (error.code === 'ENOENT') {
+                    console.log('Local subscription database not found, creating empty structure');
+                    return { contacts: {} };
+                }
+                throw error;
             }
-            throw error;
+        } else {
+            // S3 storage for Lambda/production
+            console.log('Loading subscription data from S3:', S3_BUCKET, S3_KEY);
+            const command = new GetObjectCommand({
+                Bucket: S3_BUCKET,
+                Key: S3_KEY,
+            });
+
+            try {
+                const response = await s3Client.send(command);
+                const data = await response.Body.transformToString();
+                return JSON.parse(data);
+            } catch (error) {
+                if (error.name === 'NoSuchKey') {
+                    console.log('Subscription file does not exist, creating empty structure');
+                    return { contacts: {} };
+                }
+                throw error;
+            }
         }
     } catch (error) {
         console.error('Error loading subscription data:', error);
@@ -38,20 +61,35 @@ async function loadSubscriptionData() {
 }
 
 /**
- * Save subscription data to S3
+ * Save subscription data to storage (local file or S3)
  */
 async function saveSubscriptionData(data) {
     try {
-        console.log('Saving subscription data to S3:', S3_BUCKET, S3_KEY);
-        const command = new PutObjectCommand({
-            Bucket: S3_BUCKET,
-            Key: S3_KEY,
-            Body: JSON.stringify(data, null, 2),
-            ContentType: 'application/json',
-            ServerSideEncryption: 'AES256'
-        });
+        const jsonData = JSON.stringify(data, null, 2);
 
-        await s3Client.send(command);
+        if (IS_LOCAL) {
+            // Local file system for Netlify dev
+            console.log('Saving subscription data to local file:', LOCAL_DB_PATH);
+
+            // Ensure directory exists
+            const dir = path.dirname(LOCAL_DB_PATH);
+            await fs.mkdir(dir, { recursive: true });
+
+            await fs.writeFile(LOCAL_DB_PATH, jsonData, 'utf8');
+        } else {
+            // S3 storage for Lambda/production
+            console.log('Saving subscription data to S3:', S3_BUCKET, S3_KEY);
+            const command = new PutObjectCommand({
+                Bucket: S3_BUCKET,
+                Key: S3_KEY,
+                Body: jsonData,
+                ContentType: 'application/json',
+                ServerSideEncryption: 'AES256'
+            });
+
+            await s3Client.send(command);
+        }
+
         console.log('Subscription data saved successfully');
     } catch (error) {
         console.error('Error saving subscription data:', error);
