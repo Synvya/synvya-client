@@ -125,22 +125,41 @@ export async function isSubscriptionValid(publicKey) {
             };
         }
 
-        // Parse the valid-through date (DD-MM-YYYY format)
-        const [day, month, year] = subscription.validThrough.split('-').map(Number);
-        const validThroughDate = new Date(year, month - 1, day); // month is 0-indexed
+        // Parse the valid-through date (supports both DD-MM-YYYY and YYYY-MM-DD formats)
+        let validThroughDate;
+        const dateStr = subscription.validThrough;
+
+        if (dateStr.includes('-')) {
+            const parts = dateStr.split('-');
+            if (parts[0].length === 4) {
+                // YYYY-MM-DD format
+                const [year, month, day] = parts.map(Number);
+                validThroughDate = new Date(year, month - 1, day); // month is 0-indexed
+            } else {
+                // DD-MM-YYYY format
+                const [day, month, year] = parts.map(Number);
+                validThroughDate = new Date(year, month - 1, day); // month is 0-indexed
+            }
+        } else {
+            // Fallback: try parsing as ISO date
+            validThroughDate = new Date(dateStr);
+        }
+
         const currentDate = new Date();
 
         // Set time to end of day for valid-through date to be inclusive
         validThroughDate.setHours(23, 59, 59, 999);
 
         const isValid = currentDate <= validThroughDate;
+        const timeDiff = validThroughDate - currentDate;
+        const daysRemaining = isValid ? Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) : 0;
 
         return {
             isValid,
             reason: isValid ? 'Valid subscription' : 'Subscription expired',
             subscription,
-            validThrough: validThroughDate,
-            daysRemaining: isValid ? Math.ceil((validThroughDate - currentDate) / (1000 * 60 * 60 * 24)) : 0
+            validThrough: validThroughDate.toISOString().split('T')[0], // Return as YYYY-MM-DD for consistency
+            daysRemaining
         };
     } catch (error) {
         console.error('Error checking subscription validity:', error);
