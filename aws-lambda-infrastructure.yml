@@ -134,6 +134,7 @@ Resources:
       Environment:
         Variables:
           SUBSCRIPTION_DB_BUCKET: !Ref S3BucketName
+          ZAPRITE_API_KEY:       !Ref ZapriteApiKey
       Timeout: 30
 
   PaymentWebhookUrl:
