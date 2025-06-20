@@ -1,4 +1,4 @@
-import { updateSubscription } from '../../shared/services/subscription-service.js';
+import { updateSubscription } from './shared/services/subscription-service.js';
 
 export const handler = async (event, context) => {
     console.log('Function started - event:', JSON.stringify(event, null, 2));
