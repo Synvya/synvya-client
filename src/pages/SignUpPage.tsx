@@ -144,6 +144,26 @@ const SignUpPage: React.FC = () => {
                 Sign in here
               </Link>
             </p>
+
+            <div className="text-xs text-gray-500 space-x-4">
+              <a
+                href="https://d.nostr.build/X94MRGirObzXoU2O.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#49BB5B] hover:underline"
+              >
+                Terms of Service
+              </a>
+              <span>•</span>
+              <a
+                href="https://d.nostr.build/RNCTbVG1GUPNo0XL.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#49BB5B] hover:underline"
+              >
+                Privacy Policy
+              </a>
+            </div>
           </div>
         </div>
       </div>
