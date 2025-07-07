@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getApiUrl } from '@/utils/apiConfig';
 
 interface SubscriptionData {
     contactId: string;
@@ -41,9 +42,7 @@ export const useSubscription = (publicKey?: string): UseSubscriptionReturn => {
         setError(null);
 
         try {
-            const endpoint = import.meta.env.DEV
-                ? 'http://localhost:8888/.netlify/functions/check-subscription'
-                : '/.netlify/functions/check-subscription';
+            const endpoint = getApiUrl('checkSubscription');
 
             const response = await fetch(endpoint, {
                 method: 'POST',

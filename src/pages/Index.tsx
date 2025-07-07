@@ -10,6 +10,7 @@ import OrdersPage from "./OrdersPage";
 import VisualizationPage from "./VisualizationPage";
 import SubscriptionAdmin from "./SubscriptionAdmin";
 import AuthGuard from "@/components/AuthGuard";
+import SubscriptionGuard from "@/components/SubscriptionGuard";
 import ExtensionCheck from "@/components/ExtensionCheck";
 
 const Index = () => {
@@ -29,19 +30,19 @@ const Index = () => {
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/payment-webhook" element={<PaymentWebhook />} />
             <Route path="/form" element={
-              <AuthGuard>
+              <SubscriptionGuard>
                 <FormPage />
-              </AuthGuard>
+              </SubscriptionGuard>
             } />
             <Route path="/orders" element={
-              <AuthGuard>
+              <SubscriptionGuard>
                 <OrdersPage />
-              </AuthGuard>
+              </SubscriptionGuard>
             } />
             <Route path="/visualization" element={
-              <AuthGuard>
+              <SubscriptionGuard>
                 <VisualizationPage />
-              </AuthGuard>
+              </SubscriptionGuard>
             } />
             <Route path="/admin/subscriptions" element={<SubscriptionAdmin />} />
           </Routes>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNostrAuth } from '@/contexts/NostrAuthContext';
+import { useSubscription, hasValidSubscription } from '@/hooks/useSubscription';
 import Logo from './Logo';
 import { ChevronDown } from 'lucide-react';
 import {
@@ -14,6 +15,10 @@ import {
 const NavHeader: React.FC = () => {
   const navigate = useNavigate();
   const { logout, publicKey } = useNostrAuth();
+  const { subscription } = useSubscription(publicKey || undefined);
+
+  // Check if user has valid subscription
+  const hasValidSub = hasValidSubscription(subscription);
 
   const handleLogout = () => {
     logout();
@@ -45,10 +50,15 @@ const NavHeader: React.FC = () => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={handleOrdersClick}>
-                  Orders
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                {/* Only show Orders option for users with valid subscriptions */}
+                {hasValidSub && (
+                  <>
+                    <DropdownMenuItem onClick={handleOrdersClick}>
+                      Orders
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem onClick={handleLogout}>
                   Sign Out
                 </DropdownMenuItem>

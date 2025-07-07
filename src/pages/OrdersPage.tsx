@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNostrAuth } from '@/contexts/NostrAuthContext';
+import { useSubscription, hasValidSubscription } from '@/hooks/useSubscription';
 import NavHeader from '@/components/NavHeader';
 import { getApiUrl } from '@/utils/apiConfig';
 
@@ -17,9 +18,13 @@ interface OrderInfo {
 const OrdersPage: React.FC = () => {
     const navigate = useNavigate();
     const { isAuthenticated, publicKey, isLoading: authLoading } = useNostrAuth();
+    const { subscription } = useSubscription(publicKey || undefined);
     const [orders, setOrders] = useState<OrderInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Check if user has valid subscription
+    const hasValidSub = hasValidSubscription(subscription);
 
     // Redirect if not authenticated
     useEffect(() => {
@@ -200,12 +205,26 @@ const OrdersPage: React.FC = () => {
                     )}
 
                     <div className="mt-8 pt-6 border-t border-gray-200">
-                        <button
-                            onClick={() => navigate('/form')}
-                            className="px-6 py-2 bg-gray-100 text-[#01013C] rounded-lg hover:bg-gray-200 transition-colors"
-                        >
-                            ← Back to Form
-                        </button>
+                        {hasValidSub ? (
+                            <button
+                                onClick={() => navigate('/form')}
+                                className="px-6 py-2 bg-gray-100 text-[#01013C] rounded-lg hover:bg-gray-200 transition-colors"
+                            >
+                                ← Back to Form
+                            </button>
+                        ) : (
+                            <div className="text-center">
+                                <p className="text-gray-500 text-sm mb-4">
+                                    You need an active subscription to access the business form.
+                                </p>
+                                <button
+                                    onClick={() => navigate('/payment')}
+                                    className="px-6 py-2 bg-[#49BB5B] text-white rounded-lg hover:bg-[#3DA149] transition-colors"
+                                >
+                                    Subscribe Now
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
