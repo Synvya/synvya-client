@@ -34,7 +34,7 @@ function handler(event) {
             "object-src 'none'",
             "base-uri 'self'",
             "frame-ancestors 'none'",
-            "frame-src 'self'"
+            "frame-src 'self' https://nosta.me"
         ].join("; ")
     };
 
