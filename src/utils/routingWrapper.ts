@@ -6,7 +6,7 @@
 interface SubscriptionValidation {
     isValid: boolean;
     reason: string;
-    subscription: any | null;
+    subscription: Record<string, unknown> | null;
     daysRemaining: number;
     validThrough?: string | null;
 }

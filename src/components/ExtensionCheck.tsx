@@ -19,7 +19,7 @@ const ExtensionCheck: React.FC<ExtensionCheckProps> = ({ children }) => {
             console.log('ExtensionCheck: Checking for extension (first time)');
             checkNostrExtension();
         }
-    }, [extensionChecked, checkNostrExtension]);
+    }, [extensionChecked, checkNostrExtension, location.pathname]);
 
     useEffect(() => {
         const currentPath = location.pathname;

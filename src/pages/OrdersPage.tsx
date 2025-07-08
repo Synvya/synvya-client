@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNostrAuth } from '@/contexts/NostrAuthContext';
 import { useSubscription, hasValidSubscription } from '@/hooks/useSubscription';
@@ -33,14 +33,7 @@ const OrdersPage: React.FC = () => {
         }
     }, [isAuthenticated, authLoading, navigate]);
 
-    // Fetch orders when component mounts
-    useEffect(() => {
-        if (isAuthenticated && publicKey) {
-            fetchOrders();
-        }
-    }, [isAuthenticated, publicKey]);
-
-    const fetchOrders = async () => {
+    const fetchOrders = useCallback(async () => {
         try {
             setIsLoading(true);
             setError(null);
@@ -94,7 +87,14 @@ const OrdersPage: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [publicKey]);
+
+    // Fetch orders when component mounts
+    useEffect(() => {
+        if (isAuthenticated && publicKey) {
+            fetchOrders();
+        }
+    }, [isAuthenticated, publicKey, fetchOrders]);
 
     const formatDate = (dateString: string): string => {
         if (!dateString) return 'N/A';

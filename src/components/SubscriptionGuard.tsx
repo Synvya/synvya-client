@@ -92,7 +92,7 @@ const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }) => {
         };
 
         checkSubscription();
-    }, [publicKey, location.pathname]);
+    }, [publicKey, location.pathname, isCheckingSubscription]);
 
     // Show loading while checking subscription
     if (isCheckingSubscription || !subscriptionStatus.checked) {

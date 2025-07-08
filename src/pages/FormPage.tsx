@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNostrAuth } from '@/contexts/NostrAuthContext';
 import NavHeader from '@/components/NavHeader';
@@ -164,15 +164,6 @@ const FormPage: React.FC = () => {
     }
   }, [isAuthenticated, authLoading, navigate]);
 
-  // Load profile data when available (only once on initial load)
-  useEffect(() => {
-    if (profile && !profileLoaded) {
-      console.log('FormPage: Loading profile data on initial load');
-      loadProfileIntoForm(profile);
-      setProfileLoaded(true);
-    }
-  }, [profile, profileLoaded]);
-
   // If no profile data and user is authenticated, fetch it once
   useEffect(() => {
     if (isAuthenticated && publicKey && !profile && !profileLoaded) {
@@ -276,7 +267,7 @@ const FormPage: React.FC = () => {
   };
 
   // Extract profile loading logic into a separate function
-  const loadProfileIntoForm = (profileData: typeof profile) => {
+  const loadProfileIntoForm = useCallback((profileData: typeof profile) => {
     if (!profileData) return;
 
     console.log('Loading profile data into form:', profileData);
@@ -348,7 +339,16 @@ const FormPage: React.FC = () => {
       phone: profileData.phone || '',
       categories,
     }));
-  };
+  }, [formData.businessType]);
+
+  // Load profile data when available (only once on initial load)
+  useEffect(() => {
+    if (profile && !profileLoaded) {
+      console.log('FormPage: Loading profile data on initial load');
+      loadProfileIntoForm(profile);
+      setProfileLoaded(true);
+    }
+  }, [profile, profileLoaded, loadProfileIntoForm]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
