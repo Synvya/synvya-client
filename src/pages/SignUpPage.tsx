@@ -1,7 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useNostrAuth } from '@/contexts/NostrAuthContext';
+import { useSubscription } from '@/hooks/useSubscription';
+import { getInitialRoute } from '@/utils/routingWrapper';
 import Logo from '@/components/Logo';
 import PrimaryButton from '@/components/PrimaryButton';
 import Checkbox from '@/components/Checkbox';
@@ -10,11 +12,45 @@ import { detectBrowser, getExtensionRecommendations } from '@/utils/browserDetec
 
 const SignUpPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signUp, isLoading, error, isAuthenticated, hasNostrExtension, checkNostrExtension } = useNostrAuth();
+  const location = useLocation();
+  const { signUp, isLoading, error, isAuthenticated, hasNostrExtension, checkNostrExtension, publicKey, isCheckingExtension } = useNostrAuth();
+  const { subscription, isLoading: isSubscriptionLoading } = useSubscription(publicKey || undefined);
   const [showModal, setShowModal] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [browserType] = useState(() => detectBrowser());
   const [extensionRecommendations] = useState(() => getExtensionRecommendations(browserType));
+
+  // Use shared routing logic to determine if redirect is needed
+  // Only run after context is properly initialized
+  useEffect(() => {
+    // Don't run routing logic if we're still checking extension or loading subscription
+    if (isCheckingExtension || isSubscriptionLoading) {
+      console.log('SignUpPage: Still loading context...', {
+        isCheckingExtension,
+        isSubscriptionLoading,
+        publicKey: publicKey ? 'exists' : 'null',
+        subscription: subscription ? `isValid: ${subscription.isValid}` : 'null'
+      });
+      return;
+    }
+
+    console.log('SignUpPage: useEffect triggered', {
+      publicKey: publicKey ? 'exists' : 'null',
+      subscription: subscription ? `isValid: ${subscription.isValid}` : 'null',
+      pathname: location.pathname,
+      hasNostrExtension
+    });
+
+    // If we have a public key and subscription data, check if we need to redirect
+    if (publicKey && subscription) {
+      const redirectRoute = getInitialRoute(subscription, location.pathname);
+      console.log('SignUpPage: getInitialRoute returned', redirectRoute);
+      if (redirectRoute) {
+        console.log('SignUpPage: Redirecting to', redirectRoute, 'based on subscription status');
+        navigate(redirectRoute, { replace: true });
+      }
+    }
+  }, [publicKey, subscription, location.pathname, navigate, isCheckingExtension, isSubscriptionLoading, hasNostrExtension]);
 
   // Don't auto-redirect when authenticated - let signup flow handle payment page first
 

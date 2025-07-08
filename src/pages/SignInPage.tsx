@@ -11,15 +11,11 @@ const SignInPage: React.FC = () => {
   const { signIn, isLoading, error, isAuthenticated } = useNostrAuth();
   const [showModal, setShowModal] = useState(false);
 
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/form');
-    }
-  }, [isAuthenticated, navigate]);
-
   const handleSignIn = async () => {
     try {
       await signIn();
+      // After successful sign in, redirect to form
+      navigate('/form');
     } catch (err) {
       if (err instanceof Error && err.message.includes('extension not found')) {
         setShowModal(true);

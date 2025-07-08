@@ -155,6 +155,7 @@ const FormPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [existingPictureUrl, setExistingPictureUrl] = useState<string | null>(null);
   const [existingBannerUrl, setExistingBannerUrl] = useState<string | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false); // Track if profile has been loaded
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -163,12 +164,23 @@ const FormPage: React.FC = () => {
     }
   }, [isAuthenticated, authLoading, navigate]);
 
-  // Load profile data when available
+  // Load profile data when available (only once on initial load)
   useEffect(() => {
-    if (profile) {
+    if (profile && !profileLoaded) {
+      console.log('FormPage: Loading profile data on initial load');
       loadProfileIntoForm(profile);
+      setProfileLoaded(true);
     }
-  }, [profile]);
+  }, [profile, profileLoaded]);
+
+  // If no profile data and user is authenticated, fetch it once
+  useEffect(() => {
+    if (isAuthenticated && publicKey && !profile && !profileLoaded) {
+      console.log('FormPage: No profile data found, fetching from Nostr on initial load');
+      setProfileLoaded(true); // Prevent multiple attempts
+      refreshProfile();
+    }
+  }, [isAuthenticated, publicKey, profile, profileLoaded, refreshProfile]);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -238,6 +250,7 @@ const FormPage: React.FC = () => {
     if (!publicKey) return;
 
     setIsLoading(true);
+    setProfileLoaded(false); // Reset the flag to allow fresh loading
     try {
       console.log('Refreshing profile from Nostr...');
       await refreshProfile();
@@ -248,6 +261,7 @@ const FormPage: React.FC = () => {
 
       if (refreshedProfile) {
         loadProfileIntoForm(refreshedProfile);
+        setProfileLoaded(true);
       }
 
       setSuccessMessage('Profile refreshed from Nostr network!');
@@ -255,6 +269,7 @@ const FormPage: React.FC = () => {
     } catch (error) {
       console.error('Failed to refresh profile:', error);
       setError('Failed to refresh profile from Nostr network');
+      setProfileLoaded(true); // Set to true to prevent infinite retries
     } finally {
       setIsLoading(false);
     }

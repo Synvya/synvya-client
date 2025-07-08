@@ -11,6 +11,48 @@
   targetPort = 3000
   autoLaunch = false
 
+# Don't redirect static assets and Vite development files
+[[redirects]]
+  from = "/@react-refresh"
+  to = "http://localhost:3000/@react-refresh"
+  status = 200
+
+[[redirects]]
+  from = "/@vite/*"
+  to = "http://localhost:3000/@vite/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/src/*"
+  to = "http://localhost:3000/src/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/node_modules/*"
+  to = "http://localhost:3000/node_modules/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*.js"
+  to = "http://localhost:3000/:splat.js"
+  status = 200
+
+[[redirects]]
+  from = "/*.ts"
+  to = "http://localhost:3000/:splat.ts"
+  status = 200
+
+[[redirects]]
+  from = "/*.tsx"
+  to = "http://localhost:3000/:splat.tsx"
+  status = 200
+
+[[redirects]]
+  from = "/*.css"
+  to = "http://localhost:3000/:splat.css"
+  status = 200
+
+# Catch-all redirect for SPA routing (only for non-asset requests)
 [[redirects]]
   from = "/*"
   to = "/index.html"

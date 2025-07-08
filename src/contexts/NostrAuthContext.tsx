@@ -9,6 +9,8 @@ interface NostrAuthState {
   error: string | null;
   hasNostrExtension: boolean;
   isCheckingExtension: boolean;
+  extensionChecked: boolean; // New flag to track if extension has been checked
+  autoAuthAttempted: boolean; // New flag to track if auto-auth has been attempted
 }
 
 type NostrAuthAction =
@@ -18,6 +20,8 @@ type NostrAuthAction =
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'SET_EXTENSION_STATUS'; payload: boolean }
   | { type: 'SET_CHECKING_EXTENSION'; payload: boolean }
+  | { type: 'SET_EXTENSION_CHECKED'; payload: boolean } // New action
+  | { type: 'SET_AUTO_AUTH_ATTEMPTED'; payload: boolean } // New action
   | { type: 'LOGOUT' };
 
 const initialState: NostrAuthState = {
@@ -28,6 +32,8 @@ const initialState: NostrAuthState = {
   error: null,
   hasNostrExtension: false,
   isCheckingExtension: true,
+  extensionChecked: false, // Initialize as false
+  autoAuthAttempted: false, // Initialize as false
 };
 
 const nostrAuthReducer = (state: NostrAuthState, action: NostrAuthAction): NostrAuthState => {
@@ -51,6 +57,10 @@ const nostrAuthReducer = (state: NostrAuthState, action: NostrAuthAction): Nostr
       return { ...state, hasNostrExtension: action.payload };
     case 'SET_CHECKING_EXTENSION':
       return { ...state, isCheckingExtension: action.payload };
+    case 'SET_EXTENSION_CHECKED':
+      return { ...state, extensionChecked: action.payload };
+    case 'SET_AUTO_AUTH_ATTEMPTED':
+      return { ...state, autoAuthAttempted: action.payload };
     case 'LOGOUT':
       return { ...initialState, hasNostrExtension: state.hasNostrExtension, isCheckingExtension: false };
     default:
@@ -82,7 +92,8 @@ interface NostrAuthContextType extends NostrAuthState {
     }
   ) => Promise<void>;
   refreshProfile: () => Promise<void>;
-  checkNostrExtension: () => void;
+  checkNostrExtension: () => boolean;
+  autoAuthenticate: () => Promise<void>;
 }
 
 const NostrAuthContext = createContext<NostrAuthContextType | undefined>(undefined);
@@ -91,12 +102,19 @@ export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [state, dispatch] = useReducer(nostrAuthReducer, initialState);
 
   const checkNostrExtension = React.useCallback(() => {
+    // Only check once per session
+    if (state.extensionChecked) {
+      console.log('Extension already checked this session:', state.hasNostrExtension);
+      return state.hasNostrExtension;
+    }
+
     dispatch({ type: 'SET_CHECKING_EXTENSION', payload: true });
 
     // Check immediately
     const hasExtension = typeof window !== 'undefined' && 'nostr' in window;
     dispatch({ type: 'SET_EXTENSION_STATUS', payload: hasExtension });
-    console.log('Nostr extension check:', hasExtension);
+    dispatch({ type: 'SET_EXTENSION_CHECKED', payload: true });
+    console.log('Nostr extension check (first time):', hasExtension);
 
     // If not found, wait a bit and check again (extensions load async)
     if (!hasExtension) {
@@ -111,7 +129,7 @@ export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
 
     return hasExtension;
-  }, []);
+  }, [state.extensionChecked, state.hasNostrExtension]);
 
   // Initialize nostr service on mount
   useEffect(() => {
@@ -143,6 +161,41 @@ export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch (error) {
       console.error('Sign in error:', error);
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Sign in failed' });
+    }
+  };
+
+  const autoAuthenticate = async () => {
+    // Only attempt auto-authentication once per session
+    if (state.autoAuthAttempted) {
+      console.log('Auto-authentication already attempted this session');
+      return;
+    }
+
+    console.log('Attempting auto-authentication...');
+    dispatch({ type: 'SET_AUTO_AUTH_ATTEMPTED', payload: true });
+
+    try {
+      if (!state.hasNostrExtension) {
+        console.log('No extension found for auto-authentication');
+        return;
+      }
+
+      // Get public key from extension silently
+      const publicKey = await nostrService.getPublicKey();
+      console.log('Auto-authentication: Got public key:', publicKey);
+
+      // Try to load existing profile
+      const profile = await nostrService.getProfile(publicKey);
+      console.log('Auto-authentication: Loaded profile:', profile);
+
+      dispatch({
+        type: 'SET_AUTHENTICATED',
+        payload: { publicKey, profile: profile || undefined }
+      });
+    } catch (error) {
+      console.error('Auto-authentication error:', error);
+      // Don't dispatch error for auto-authentication failures
+      // This is a silent operation
     }
   };
 
@@ -217,6 +270,7 @@ export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     updateProfile,
     refreshProfile,
     checkNostrExtension,
+    autoAuthenticate,
   };
 
   return (

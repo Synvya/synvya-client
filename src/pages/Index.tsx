@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { NostrAuthProvider } from "@/contexts/NostrAuthContext";
+import { ROUTES } from "@/utils/routingWrapper";
 import SignInPage from "./SignInPage";
 import SignUpPage from "./SignUpPage";
 import PaymentPage from "./PaymentPage";
@@ -19,7 +20,7 @@ const Index = () => {
       <ExtensionCheck>
         <div className="min-h-screen bg-[#F6F6F9]">
           <Routes>
-            <Route path="/" element={<Navigate to="/signin" replace />} />
+            <Route path="/" element={<Navigate to={ROUTES.SIGNUP} replace />} />
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/payment" element={

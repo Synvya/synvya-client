@@ -27,6 +27,26 @@ interface UseSubscriptionReturn {
     refreshSubscription: () => Promise<void>;
 }
 
+// Temporary mock data for testing
+const MOCK_MODE = import.meta.env.DEV && import.meta.env.VITE_MOCK_SUBSCRIPTION === 'true';
+const MOCK_SUBSCRIPTION_DATA = {
+    "c8df6ae886c711b0e87adf24da0181f5081f2b653a61a23b1055a36022293a06": {
+        isValid: true,
+        reason: 'Valid subscription',
+        subscription: {
+            contactId: 'cmc2b8e4w0003js047ccqmnsg',
+            validThrough: '18-07-2025',
+            planType: 'monthly',
+            email: 'sandbox@synvya.com',
+            orderId: 'od_hWPv3KD9Gx',
+            status: 'active',
+            lastUpdated: '2025-06-18T18:53:35.394Z'
+        },
+        daysRemaining: 12,
+        validThrough: '2025-07-19'
+    }
+};
+
 export const useSubscription = (publicKey?: string): UseSubscriptionReturn => {
     const [subscription, setSubscription] = useState<SubscriptionValidation | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +62,22 @@ export const useSubscription = (publicKey?: string): UseSubscriptionReturn => {
         setError(null);
 
         try {
+            // Mock mode for testing
+            if (MOCK_MODE) {
+                console.log('useSubscription: Using mock mode for testing');
+                const mockResult = MOCK_SUBSCRIPTION_DATA[key] || {
+                    isValid: false,
+                    reason: 'No subscription found',
+                    subscription: null,
+                    daysRemaining: 0,
+                    validThrough: null
+                };
+                console.log('useSubscription: Mock result:', mockResult);
+                setSubscription(mockResult);
+                setIsLoading(false);
+                return;
+            }
+
             const endpoint = getApiUrl('checkSubscription');
 
             const response = await fetch(endpoint, {
