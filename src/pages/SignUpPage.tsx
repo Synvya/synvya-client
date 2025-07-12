@@ -58,7 +58,10 @@ const SignUpPage: React.FC = () => {
       setCheckingExistingUser(true);
 
       // Get public key from extension to check if user exists
-      const publicKey = await (window as any).nostr.getPublicKey();
+      const publicKey = await window.nostr?.getPublicKey();
+      if (!publicKey) {
+        throw new Error('Failed to get public key from extension');
+      }
       console.log('Checking if user exists with public key:', publicKey);
 
       const response = await fetch(`${getApiUrl('checkUserExists')}?publicKey=${publicKey}`);
@@ -86,7 +89,10 @@ const SignUpPage: React.FC = () => {
       await signUp();
 
       // Get public key again for terms recording
-      const publicKey = await (window as any).nostr.getPublicKey();
+      const publicKey = await window.nostr?.getPublicKey();
+      if (!publicKey) {
+        throw new Error('Failed to get public key from extension');
+      }
 
       // Record terms acceptance and go to form
       console.log('New user, recording terms acceptance');
