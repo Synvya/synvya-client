@@ -1,0 +1,17 @@
+{
+    "name": "synvya-health-check",
+    "version": "1.0.0",
+    "description": "Health check function for Synvya serverless infrastructure",
+    "type": "module",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"No tests yet\" && exit 0"
+    },
+    "keywords": [
+        "health",
+        "serverless",
+        "synvya"
+    ],
+    "author": "Synvya",
+    "license": "MIT"
+}

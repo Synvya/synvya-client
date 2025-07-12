@@ -62,7 +62,13 @@ const nostrAuthReducer = (state: NostrAuthState, action: NostrAuthAction): Nostr
     case 'SET_AUTO_AUTH_ATTEMPTED':
       return { ...state, autoAuthAttempted: action.payload };
     case 'LOGOUT':
-      return { ...initialState, hasNostrExtension: state.hasNostrExtension, isCheckingExtension: false };
+      return {
+        ...initialState,
+        hasNostrExtension: state.hasNostrExtension,
+        isCheckingExtension: false,
+        extensionChecked: state.extensionChecked,
+        autoAuthAttempted: false // Reset auto-auth flag on logout
+      };
     default:
       return state;
   }
@@ -93,7 +99,6 @@ interface NostrAuthContextType extends NostrAuthState {
   ) => Promise<void>;
   refreshProfile: () => Promise<void>;
   checkNostrExtension: () => boolean;
-  autoAuthenticate: () => Promise<void>;
 }
 
 const NostrAuthContext = createContext<NostrAuthContextType | undefined>(undefined);
@@ -164,40 +169,7 @@ export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const autoAuthenticate = async () => {
-    // Only attempt auto-authentication once per session
-    if (state.autoAuthAttempted) {
-      console.log('Auto-authentication already attempted this session');
-      return;
-    }
 
-    console.log('Attempting auto-authentication...');
-    dispatch({ type: 'SET_AUTO_AUTH_ATTEMPTED', payload: true });
-
-    try {
-      if (!state.hasNostrExtension) {
-        console.log('No extension found for auto-authentication');
-        return;
-      }
-
-      // Get public key from extension silently
-      const publicKey = await nostrService.getPublicKey();
-      console.log('Auto-authentication: Got public key:', publicKey);
-
-      // Try to load existing profile
-      const profile = await nostrService.getProfile(publicKey);
-      console.log('Auto-authentication: Loaded profile:', profile);
-
-      dispatch({
-        type: 'SET_AUTHENTICATED',
-        payload: { publicKey, profile: profile || undefined }
-      });
-    } catch (error) {
-      console.error('Auto-authentication error:', error);
-      // Don't dispatch error for auto-authentication failures
-      // This is a silent operation
-    }
-  };
 
   const signUp = async () => {
     console.log('Attempting sign up...');
@@ -270,7 +242,6 @@ export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     updateProfile,
     refreshProfile,
     checkNostrExtension,
-    autoAuthenticate,
   };
 
   return (

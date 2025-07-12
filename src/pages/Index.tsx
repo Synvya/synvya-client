@@ -3,15 +3,10 @@ import { NostrAuthProvider } from "@/contexts/NostrAuthContext";
 import { ROUTES } from "@/utils/routingWrapper";
 import SignInPage from "./SignInPage";
 import SignUpPage from "./SignUpPage";
-import PaymentPage from "./PaymentPage";
-import PaymentSuccess from "./PaymentSuccess";
-import PaymentWebhook from "./PaymentWebhook";
 import FormPage from "./FormPage";
 import OrdersPage from "./OrdersPage";
 import VisualizationPage from "./VisualizationPage";
-import SubscriptionAdmin from "./SubscriptionAdmin";
 import AuthGuard from "@/components/AuthGuard";
-import SubscriptionGuard from "@/components/SubscriptionGuard";
 import ExtensionCheck from "@/components/ExtensionCheck";
 
 const Index = () => {
@@ -23,29 +18,21 @@ const Index = () => {
             <Route path="/" element={<Navigate to={ROUTES.SIGNUP} replace />} />
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
-            <Route path="/payment" element={
+            <Route path="/form" element={
               <AuthGuard>
-                <PaymentPage />
+                <FormPage />
               </AuthGuard>
             } />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="/payment-webhook" element={<PaymentWebhook />} />
-            <Route path="/form" element={
-              <SubscriptionGuard>
-                <FormPage />
-              </SubscriptionGuard>
-            } />
             <Route path="/orders" element={
-              <SubscriptionGuard>
+              <AuthGuard>
                 <OrdersPage />
-              </SubscriptionGuard>
+              </AuthGuard>
             } />
             <Route path="/visualization" element={
-              <SubscriptionGuard>
+              <AuthGuard>
                 <VisualizationPage />
-              </SubscriptionGuard>
+              </AuthGuard>
             } />
-            <Route path="/admin/subscriptions" element={<SubscriptionAdmin />} />
           </Routes>
         </div>
       </ExtensionCheck>

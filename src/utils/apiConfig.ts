@@ -1,22 +1,14 @@
-// API configuration utility for Lambda function URLs
-// Handles both production (runtime-env.js) and local development (Netlify functions)
-//
-// MIGRATION NOTES:
-// - Production now uses AWS Lambda Function URLs instead of Netlify Functions
-// - Function URLs are loaded via /runtime-env.js which sets window.runtimeEnv
-// - Local development still uses Netlify dev server (localhost:8888)
-// - All 6 functions have been migrated: checkSubscription, createZapriteOrder, 
-//   paymentWebhook, getOrder, getUserOrders, checkContact
+// API configuration utility for serverless functions
+// Handles both production and local development environments
 
 declare global {
     interface Window {
         runtimeEnv?: {
-            paymentWebhookUrl?: string;
-            getOrderUrl?: string;
-            getUserOrdersUrl?: string;
-            checkSubscriptionUrl?: string;
-            createZapriteOrderUrl?: string;
-            checkContactUrl?: string;
+            healthUrl?: string;
+            recordTermsAcceptanceUrl?: string;
+            checkUserExistsUrl?: string;
+            // Future API endpoints can be added here
+            [key: string]: string;
         };
     }
 }
@@ -25,12 +17,10 @@ const isDev = import.meta.env.DEV || import.meta.env.MODE === 'development';
 
 // Local development URLs (Netlify dev server)
 const LOCAL_URLS = {
-    checkSubscription: 'http://localhost:8888/.netlify/functions/check-subscription',
-    createZapriteOrder: 'http://localhost:8888/.netlify/functions/create-zaprite-order',
-    paymentWebhook: 'http://localhost:8888/.netlify/functions/payment-webhook',
-    getOrder: 'http://localhost:8888/.netlify/functions/get-order',
-    getUserOrders: 'http://localhost:8888/.netlify/functions/get-user-orders',
-    checkContact: 'http://localhost:8888/.netlify/functions/check-contact',
+    health: 'http://localhost:8888/.netlify/functions/health',
+    recordTermsAcceptance: 'http://localhost:8888/.netlify/functions/record-terms-acceptance',
+    checkUserExists: 'http://localhost:8888/.netlify/functions/check-user-exists',
+    // Future local endpoints can be added here
 };
 
 // Get API URLs - uses runtime config in production, local URLs in development
@@ -47,12 +37,11 @@ export const getApiUrls = () => {
     }
 
     return {
-        checkSubscription: config.checkSubscriptionUrl || LOCAL_URLS.checkSubscription,
-        createZapriteOrder: config.createZapriteOrderUrl || LOCAL_URLS.createZapriteOrder,
-        paymentWebhook: config.paymentWebhookUrl || LOCAL_URLS.paymentWebhook,
-        getOrder: config.getOrderUrl || LOCAL_URLS.getOrder,
-        getUserOrders: config.getUserOrdersUrl || LOCAL_URLS.getUserOrders,
-        checkContact: config.checkContactUrl || LOCAL_URLS.checkContact,
+        health: config.healthUrl || LOCAL_URLS.health,
+        recordTermsAcceptance: config.recordTermsAcceptanceUrl || LOCAL_URLS.recordTermsAcceptance,
+        checkUserExists: config.checkUserExistsUrl || LOCAL_URLS.checkUserExists,
+        // Future endpoints can be added here
+        ...LOCAL_URLS,
     };
 };
 

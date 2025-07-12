@@ -23,7 +23,7 @@ env:
   DISTRIBUTION_ID: E3DPPDWMXK3MAD              # ❂ CloudFront ID
   AWS_REGION: us-east-1                        # ❸ Region for S3 + CLI
   LAMBDA_STACK_NAME: synvya-lambda-infrastructure
-  LAMBDA_S3_BUCKET: synvya-subscriptions-prod
+  LAMBDA_S3_BUCKET: synvya-user-records-prod
 
 jobs:
   deploy:
@@ -87,8 +87,6 @@ jobs:
 
     - name: Deploy Lambda functions using deployment script
       if: steps.lambda-changes.outputs.lambda_changed == 'true'
-      env:
-        ZAPRITE_API_KEY: ${{ secrets.ZAPRITE_API_KEY }}
       run: ./scripts/deploy-lambda-infrastructure.sh
 
     - name: Build frontend
@@ -114,8 +112,6 @@ jobs:
     # -----------------------------------------------------
     # Bust CloudFront cache for index.html only
     # -----------------------------------------------------
-
-
     - name: Invalidate CloudFront cache
       run: |
         # Invalidate both index.html and runtime-env.js to ensure latest configuration is served

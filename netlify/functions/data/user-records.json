@@ -1,0 +1,26 @@
+{
+  "users": {
+    "a1b2c3d4e5f6789abcdef0123456789abcdef0123456789abcdef0123456789a": {
+      "publicKey": "a1b2c3d4e5f6789abcdef0123456789abcdef0123456789abcdef0123456789a",
+      "acceptedAt": "2025-07-12T02:25:46.164Z",
+      "termsVersion": "2024-01-01"
+    },
+    "c8df6ae886c711b0e87adf24da0181f5081f2b653a61a23b1055a36022293a06": {
+      "publicKey": "c8df6ae886c711b0e87adf24da0181f5081f2b653a61a23b1055a36022293a06",
+      "acceptedAt": "2025-07-12T03:12:08.949Z",
+      "termsVersion": "1.0"
+    },
+    "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef": {
+      "publicKey": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+      "acceptedAt": "2025-07-12T03:17:58.405Z",
+      "termsVersion": "1.0"
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "created": "2025-07-12T01:00:00.000Z",
+    "description": "User signup and terms acceptance records for legal compliance",
+    "totalUsers": 3,
+    "lastUpdated": "2025-07-12T03:17:58.407Z"
+  }
+}

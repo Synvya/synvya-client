@@ -1,79 +1,128 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useNostrAuth } from '@/contexts/NostrAuthContext';
-import { useSubscription } from '@/hooks/useSubscription';
-import { getInitialRoute } from '@/utils/routingWrapper';
 import Logo from '@/components/Logo';
 import PrimaryButton from '@/components/PrimaryButton';
 import Checkbox from '@/components/Checkbox';
 import NostrExtensionModal from '@/components/NostrExtensionModal';
 import { detectBrowser, getExtensionRecommendations } from '@/utils/browserDetection';
+import { getApiUrl } from '@/utils/apiConfig';
 
 const SignUpPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { signUp, isLoading, error, isAuthenticated, hasNostrExtension, checkNostrExtension, publicKey, isCheckingExtension } = useNostrAuth();
-  const { subscription, isLoading: isSubscriptionLoading } = useSubscription(publicKey || undefined);
+  const { signUp, isLoading, error, hasNostrExtension, checkNostrExtension } = useNostrAuth();
   const [showModal, setShowModal] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [browserType] = useState(() => detectBrowser());
   const [extensionRecommendations] = useState(() => getExtensionRecommendations(browserType));
+  const [checkingExistingUser, setCheckingExistingUser] = useState(false);
+  const [isExistingUser, setIsExistingUser] = useState<boolean | null>(null);
 
-  // Use shared routing logic to determine if redirect is needed
-  // Only run after context is properly initialized
-  useEffect(() => {
-    // Don't run routing logic if we're still checking extension or loading subscription
-    if (isCheckingExtension || isSubscriptionLoading) {
-      console.log('SignUpPage: Still loading context...', {
-        isCheckingExtension,
-        isSubscriptionLoading,
-        publicKey: publicKey ? 'exists' : 'null',
-        subscription: subscription ? `isValid: ${subscription.isValid}` : 'null'
-      });
-      return;
-    }
-
-    console.log('SignUpPage: useEffect triggered', {
-      publicKey: publicKey ? 'exists' : 'null',
-      subscription: subscription ? `isValid: ${subscription.isValid}` : 'null',
-      pathname: location.pathname,
-      hasNostrExtension
-    });
-
-    // If we have a public key and subscription data, check if we need to redirect
-    if (publicKey && subscription) {
-      const redirectRoute = getInitialRoute(subscription, location.pathname);
-      console.log('SignUpPage: getInitialRoute returned', redirectRoute);
-      if (redirectRoute) {
-        console.log('SignUpPage: Redirecting to', redirectRoute, 'based on subscription status');
-        navigate(redirectRoute, { replace: true });
-      }
-    }
-  }, [publicKey, subscription, location.pathname, navigate, isCheckingExtension, isSubscriptionLoading, hasNostrExtension]);
-
-  // Don't auto-redirect when authenticated - let signup flow handle payment page first
-
-  // Check for extension on component mount and periodically
+  // Check for extension on component mount and periodically until found
   useEffect(() => {
     checkNostrExtension();
-    const interval = setInterval(checkNostrExtension, 1000); // Check every second
-    return () => clearInterval(interval);
-  }, [checkNostrExtension]);
 
-  const canSignUp = hasNostrExtension && termsAgreed;
+    // Only set up interval if extension is not found
+    if (!hasNostrExtension) {
+      const interval = setInterval(() => {
+        const found = checkNostrExtension();
+        if (found) {
+          clearInterval(interval);
+        }
+      }, 1000); // Check every second until found
+
+      return () => clearInterval(interval);
+    }
+  }, [checkNostrExtension, hasNostrExtension]);
+
+  // Check if user already exists when extension is available
+  useEffect(() => {
+    if (hasNostrExtension && isExistingUser === null) {
+      checkIfUserExists();
+    }
+  }, [hasNostrExtension, isExistingUser]);
+
+  // Redirect existing users to sign in
+  useEffect(() => {
+    if (isExistingUser === true) {
+      const timer = setTimeout(() => {
+        navigate('/signin');
+      }, 2000); // Give them time to read the message
+      return () => clearTimeout(timer);
+    }
+  }, [isExistingUser, navigate]);
+
+  const checkIfUserExists = async () => {
+    try {
+      setCheckingExistingUser(true);
+
+      // Get public key from extension to check if user exists
+      const publicKey = await (window as any).nostr.getPublicKey();
+      console.log('Checking if user exists with public key:', publicKey);
+
+      const response = await fetch(`${getApiUrl('checkUserExists')}?publicKey=${publicKey}`);
+      const result = await response.json();
+
+      console.log('User existence check result:', result);
+      setIsExistingUser(result.exists);
+
+    } catch (error) {
+      console.error('Error checking if user exists:', error);
+      // If check fails, assume new user to allow signup flow
+      setIsExistingUser(false);
+    } finally {
+      setCheckingExistingUser(false);
+    }
+  };
+
+  const canSignUp = hasNostrExtension && termsAgreed && isExistingUser === false;
 
   const handleSignUp = async () => {
     if (!canSignUp) return;
 
     try {
+      // Authenticate the user
       await signUp();
-      // After successful authentication, redirect to payment page
-      navigate('/payment');
+
+      // Get public key again for terms recording
+      const publicKey = await (window as any).nostr.getPublicKey();
+
+      // Record terms acceptance and go to form
+      console.log('New user, recording terms acceptance');
+      await recordTermsAcceptanceServerSide(publicKey);
+      navigate('/form');
+
     } catch (err) {
+      console.error('Sign up error:', err);
       if (err instanceof Error && err.message.includes('extension not found')) {
         setShowModal(true);
       }
+    }
+  };
+
+  const recordTermsAcceptanceServerSide = async (userPublicKey: string) => {
+    try {
+      const response = await fetch(getApiUrl('recordTermsAcceptance'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          publicKey: userPublicKey,
+          termsVersion: '1.0'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to record terms acceptance: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Terms acceptance recorded server-side:', result);
+    } catch (error) {
+      console.error('Failed to record terms acceptance server-side:', error);
+      // Note: We don't block the user flow if this fails, but we log it
     }
   };
 
@@ -82,6 +131,46 @@ const SignUpPage: React.FC = () => {
     handleSignUp();
   };
 
+  // Show existing user message
+  if (isExistingUser === true) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F6F6F9] px-4">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div className="mb-8">
+              <Logo className="mx-auto mb-4 text-3xl" />
+              <h1 className="text-2xl font-bold text-[#01013C] mb-2">
+                Welcome Back!
+              </h1>
+              <p className="text-gray-600 text-sm">
+                You already have an account. Redirecting to sign in...
+              </p>
+            </div>
+
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#49BB5B] mr-3"></div>
+                <p className="text-blue-700 text-sm">
+                  Redirecting to sign in page...
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600">
+              Click here if you're not redirected automatically:{' '}
+              <Link
+                to="/signin"
+                className="text-[#49BB5B] hover:underline font-medium"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F6F6F9] px-4">
       <div className="w-full max-w-md">
@@ -89,8 +178,11 @@ const SignUpPage: React.FC = () => {
           <div className="mb-8">
             <Logo className="mx-auto mb-4 text-3xl" />
             <h1 className="text-2xl font-bold text-[#01013C] mb-2">
-              Become Visible Again
+              Sign up for FREE
             </h1>
+            <p className="text-gray-600 text-sm">
+              Publish your business info and product catalog in an AI-friendly way.
+            </p>
           </div>
 
           {error && (
@@ -100,44 +192,44 @@ const SignUpPage: React.FC = () => {
           )}
 
           <div className="space-y-6">
-            <div className="space-y-4 text-left">
-              {/* Extension Warning/Status */}
-              {!hasNostrExtension ? (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium text-yellow-800">
-                        Nostr browser extension not found
-                      </h3>
-                      <div className="mt-2 text-sm text-yellow-700">
-                        <p>Please install an extension like{' '}
-                          {extensionRecommendations.extensions.map((ext, index) => (
-                            <span key={ext.name}>
-                              <a
-                                href={ext.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="underline hover:text-yellow-900"
-                              >
-                                {ext.name}
-                              </a>
-                              {index < extensionRecommendations.extensions.length - 1 &&
-                                (index === extensionRecommendations.extensions.length - 2 ? ', or ' : ', ')
-                              }
-                            </span>
-                          ))}
-                          .
-                        </p>
+            {/* Extension Detection */}
+            <div className="text-left">
+              <h3 className="text-lg font-semibold text-[#01013C] mb-3">Step 1: Install Nostr Extension</h3>
+
+              {!hasNostrExtension && (
+                <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                  <p className="text-orange-700 text-sm mb-2">
+                    You need a Nostr extension to sign up. We recommend:
+                  </p>
+                  <div className="space-y-2">
+                    {extensionRecommendations.extensions.map((extension, index) => (
+                      <div key={index} className="text-sm">
+                        <a
+                          href={extension.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#49BB5B] hover:underline font-medium"
+                        >
+                          {extension.name}
+                        </a>
                       </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
-              ) : (
+              )}
+
+              {hasNostrExtension && checkingExistingUser && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#49BB5B] mr-3"></div>
+                    <p className="text-blue-700 text-sm">
+                      Checking if you already have an account...
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {hasNostrExtension && !checkingExistingUser && isExistingUser === false && (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
@@ -153,22 +245,27 @@ const SignUpPage: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Terms Agreement */}
+            <div className="text-left">
+              <h3 className="text-lg font-semibold text-[#01013C] mb-3">Step 2: Accept Terms</h3>
 
               <Checkbox
                 id="terms"
                 label="I agree to the Terms of Service and Privacy Policy."
                 checked={termsAgreed}
                 onChange={setTermsAgreed}
-                disabled={!hasNostrExtension}
+                disabled={!hasNostrExtension || checkingExistingUser || isExistingUser !== false}
               />
             </div>
 
             <PrimaryButton
               onClick={handleSignUp}
-              disabled={isLoading || !canSignUp}
+              disabled={isLoading || !canSignUp || checkingExistingUser}
               className="w-full"
             >
-              {isLoading ? 'Signing Up...' : 'Sign Up'}
+              {isLoading ? 'Signing Up...' : 'Sign Up Now'}
             </PrimaryButton>
 
             <p className="text-sm text-gray-600">
@@ -192,7 +289,7 @@ const SignUpPage: React.FC = () => {
               </a>
               <span>•</span>
               <a
-                href="https://d.nostr.build/RNCTbVG1GUPNo0XL.pdf"
+                href="https://d.nostr.build/X94MRGirObzXoU2O.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-[#49BB5B] hover:underline"
@@ -204,11 +301,13 @@ const SignUpPage: React.FC = () => {
         </div>
       </div>
 
-      <NostrExtensionModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onRetry={handleRetry}
-      />
+      {showModal && (
+        <NostrExtensionModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onRetry={handleRetry}
+        />
+      )}
     </div>
   );
 };

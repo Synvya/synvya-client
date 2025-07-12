@@ -1,20 +1,16 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  Synvya – six Lambda functions + Function URLs
-  Uses an existing encrypted S3 bucket as its JSON “database”.
+  Synvya – Free service with terms acceptance tracking
+  Records user signups and terms acceptance in S3
 
 # ---------------------------------------------------------------------------
 # Parameters
 # ---------------------------------------------------------------------------
 Parameters:
-  ZapriteApiKey:
-    Type: String
-    NoEcho: true
-    Description: Zaprite API key passed to the Zaprite functions
   S3BucketName:
     Type: String
-    Default: synvya-subscriptions-prod
-    Description: Name of the pre-existing S3 bucket that stores the database
+    Default: synvya-user-records-prod
+    Description: Name of the pre-existing S3 bucket that stores user signup records
 
   LambdaExecutionRoleArn:
     Type: AWS::SSM::Parameter::Value<String>
@@ -51,231 +47,117 @@ Resources:
                   - s3:PutObject
                 Resource: !Sub "arn:aws:s3:::${S3BucketName}/*"
 
-
-
 # ---------------------------------------------------------------------------
-# Lambda: check-subscription
+# Lambda: record-terms-acceptance
 # ---------------------------------------------------------------------------
-  CheckSubscriptionFunction:
+  RecordTermsAcceptanceFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: synvya-check-subscription
+      FunctionName: synvya-record-terms-acceptance
       Runtime: nodejs20.x
       Handler: index.handler
       Role: !Ref LambdaExecutionRoleArn
       Code:
         S3Bucket: !Ref S3BucketName
-        S3Key:   lambda-functions/check-subscription.zip
+        S3Key: lambda-functions/record-terms-acceptance.zip
       Environment:
         Variables:
-          SUBSCRIPTION_DB_BUCKET: !Ref S3BucketName
+          USER_RECORDS_BUCKET: !Ref S3BucketName
       Timeout: 30
 
-  CheckSubscriptionUrl:
+  RecordTermsAcceptanceUrl:
     Type: AWS::Lambda::Url
     Properties:
-      TargetFunctionArn: !GetAtt CheckSubscriptionFunction.Arn
+      TargetFunctionArn: !GetAtt RecordTermsAcceptanceFunction.Arn
       AuthType: NONE
 
-  CheckSubscriptionUrlPermission:
+  RecordTermsAcceptanceUrlPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName:       !Ref CheckSubscriptionFunction
-      Action:             lambda:InvokeFunctionUrl
-      Principal:          "*"
+      FunctionName: !Ref RecordTermsAcceptanceFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
       FunctionUrlAuthType: NONE
 
 # ---------------------------------------------------------------------------
-# Lambda: create-zaprite-order
+# Lambda: health-check
 # ---------------------------------------------------------------------------
-  CreateZapriteOrderFunction:
+  HealthCheckFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: synvya-create-zaprite-order
+      FunctionName: synvya-health-check
       Runtime: nodejs20.x
       Handler: index.handler
       Role: !Ref LambdaExecutionRoleArn
       Code:
-        S3Bucket: !Ref S3BucketName
-        S3Key:   lambda-functions/create-zaprite-order.zip
-      Environment:
-        Variables:
-          SUBSCRIPTION_DB_BUCKET: !Ref S3BucketName
-          ZAPRITE_API_KEY:       !Ref ZapriteApiKey
-      Timeout: 60
-
-  CreateZapriteOrderUrl:
-    Type: AWS::Lambda::Url
-    Properties:
-      TargetFunctionArn: !GetAtt CreateZapriteOrderFunction.Arn
-      AuthType: NONE
-
-  CreateZapriteOrderUrlPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName:       !Ref CreateZapriteOrderFunction
-      Action:             lambda:InvokeFunctionUrl
-      Principal:          "*"
-      FunctionUrlAuthType: NONE
-
-# ---------------------------------------------------------------------------
-# Lambda: payment-webhook
-# ---------------------------------------------------------------------------
-  PaymentWebhookFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: synvya-payment-webhook
-      Runtime: nodejs20.x
-      Handler: index.handler
-      Role: !Ref LambdaExecutionRoleArn
-      Code:
-        S3Bucket: !Ref S3BucketName
-        S3Key:   lambda-functions/payment-webhook.zip
-      Environment:
-        Variables:
-          SUBSCRIPTION_DB_BUCKET: !Ref S3BucketName
-          ZAPRITE_API_KEY:       !Ref ZapriteApiKey
+        ZipFile: |
+          export const handler = async (event, context) => {
+              const method = event.requestContext.http.method;
+              
+              if (method === 'OPTIONS') {
+                  return {
+                      statusCode: 200,
+                      headers: {
+                          'Access-Control-Allow-Origin': '*',
+                          'Access-Control-Allow-Headers': 'Content-Type',
+                          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                          'Access-Control-Max-Age': '86400'
+                      },
+                      body: ''
+                  };
+              }
+              
+              if (method !== 'GET') {
+                  return {
+                      statusCode: 405,
+                      headers: { 'Access-Control-Allow-Origin': '*' },
+                      body: JSON.stringify({ error: 'Method not allowed' })
+                  };
+              }
+              
+              return {
+                  statusCode: 200,
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'Access-Control-Allow-Origin': '*'
+                  },
+                  body: JSON.stringify({
+                      status: 'healthy',
+                      environment: process.env.NODE_ENV || 'production',
+                      timestamp: new Date().toISOString(),
+                      message: 'Synvya serverless functions are operational',
+                      runtime: 'aws-lambda'
+                  })
+              };
+          };
       Timeout: 30
 
-  PaymentWebhookUrl:
+  HealthCheckUrl:
     Type: AWS::Lambda::Url
     Properties:
-      TargetFunctionArn: !GetAtt PaymentWebhookFunction.Arn
+      TargetFunctionArn: !GetAtt HealthCheckFunction.Arn
       AuthType: NONE
 
-  PaymentWebhookUrlPermission:
+  HealthCheckUrlPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName:       !Ref PaymentWebhookFunction
-      Action:             lambda:InvokeFunctionUrl
-      Principal:          "*"
+      FunctionName: !Ref HealthCheckFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
       FunctionUrlAuthType: NONE
-
-# ---------------------------------------------------------------------------
-# Lambda: get-order
-# ---------------------------------------------------------------------------
-  GetOrderFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: synvya-get-order
-      Runtime: nodejs20.x
-      Handler: index.handler
-      Role: !Ref LambdaExecutionRoleArn
-      Code:
-        S3Bucket: !Ref S3BucketName
-        S3Key:   lambda-functions/get-order.zip
-      Environment:
-        Variables:
-          ZAPRITE_API_KEY: !Ref ZapriteApiKey
-      Timeout: 30
-
-  GetOrderUrl:
-    Type: AWS::Lambda::Url
-    Properties:
-      TargetFunctionArn: !GetAtt GetOrderFunction.Arn
-      AuthType: NONE
-
-  GetOrderUrlPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName:       !Ref GetOrderFunction
-      Action:             lambda:InvokeFunctionUrl
-      Principal:          "*"
-      FunctionUrlAuthType: NONE
-
-# ---------------------------------------------------------------------------
-# Lambda: get-user-orders
-# ---------------------------------------------------------------------------
-  GetUserOrdersFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: synvya-get-user-orders
-      Runtime: nodejs20.x
-      Handler: index.handler
-      Role: !Ref LambdaExecutionRoleArn
-      Code:
-        S3Bucket: !Ref S3BucketName
-        S3Key:   lambda-functions/get-user-orders.zip
-      Environment:
-        Variables:
-          SUBSCRIPTION_DB_BUCKET: !Ref S3BucketName
-      Timeout: 30
-
-  GetUserOrdersUrl:
-    Type: AWS::Lambda::Url
-    Properties:
-      TargetFunctionArn: !GetAtt GetUserOrdersFunction.Arn
-      AuthType: NONE
-
-  GetUserOrdersUrlPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName:       !Ref GetUserOrdersFunction
-      Action:             lambda:InvokeFunctionUrl
-      Principal:          "*"
-      FunctionUrlAuthType: NONE
-
-# ---------------------------------------------------------------------------
-# Lambda: check-contact
-# ---------------------------------------------------------------------------
-  CheckContactFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: synvya-check-contact
-      Runtime: nodejs20.x
-      Handler: index.handler
-      Role: !Ref LambdaExecutionRoleArn
-      Code:
-        S3Bucket: !Ref S3BucketName
-        S3Key:   lambda-functions/check-contact.zip
-      Environment:
-        Variables:
-          ZAPRITE_API_KEY: !Ref ZapriteApiKey
-      Timeout: 30
-
-  CheckContactUrl:
-    Type: AWS::Lambda::Url
-    Properties:
-      TargetFunctionArn: !GetAtt CheckContactFunction.Arn
-      AuthType: NONE
-
-
-  CheckContactUrlPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName:       !Ref CheckContactFunction
-      Action:             lambda:InvokeFunctionUrl
-      Principal:          "*"
-      FunctionUrlAuthType: NONE
-
-# CloudFront Function is managed manually in AWS Console
-# The AddSecurityHeaders function already exists and is associated with the distribution
 
 # ---------------------------------------------------------------------------
 # Outputs
 # ---------------------------------------------------------------------------
 Outputs:
+  RecordTermsAcceptanceUrl:
+    Description: URL for recording terms acceptance
+    Value: !GetAtt RecordTermsAcceptanceUrl.FunctionUrl
+    Export:
+      Name: !Sub "${AWS::StackName}-RecordTermsAcceptanceUrl"
 
-  CheckSubscriptionUrl:
-    Description: URL for check-subscription
-    Value: !GetAtt CheckSubscriptionUrl.FunctionUrl
-
-  CreateZapriteOrderUrl:
-    Description: URL for create-zaprite-order
-    Value: !GetAtt CreateZapriteOrderUrl.FunctionUrl
-
-  PaymentWebhookUrl:
-    Description: URL for payment-webhook
-    Value: !GetAtt PaymentWebhookUrl.FunctionUrl
-
-  GetOrderUrl:
-    Description: URL for get-order
-    Value: !GetAtt GetOrderUrl.FunctionUrl
-
-  GetUserOrdersUrl:
-    Description: URL for get-user-orders
-    Value: !GetAtt GetUserOrdersUrl.FunctionUrl
-
-  CheckContactUrl:
-    Description: URL for check-contact
-    Value: !GetAtt CheckContactUrl.FunctionUrl
+  HealthCheckUrl:
+    Description: URL for health check endpoint
+    Value: !GetAtt HealthCheckUrl.FunctionUrl
+    Export:
+      Name: !Sub "${AWS::StackName}-HealthCheckUrl"

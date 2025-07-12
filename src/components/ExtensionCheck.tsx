@@ -9,7 +9,7 @@ interface ExtensionCheckProps {
 const ExtensionCheck: React.FC<ExtensionCheckProps> = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { hasNostrExtension, isCheckingExtension, checkNostrExtension, autoAuthenticate, isAuthenticated, extensionChecked, autoAuthAttempted } = useNostrAuth();
+    const { hasNostrExtension, isCheckingExtension, checkNostrExtension, extensionChecked } = useNostrAuth();
 
     useEffect(() => {
         console.log('ExtensionCheck: Current path:', location.pathname);
@@ -23,29 +23,22 @@ const ExtensionCheck: React.FC<ExtensionCheckProps> = ({ children }) => {
 
     useEffect(() => {
         const currentPath = location.pathname;
-        console.log('ExtensionCheck: hasNostrExtension:', hasNostrExtension, 'isCheckingExtension:', isCheckingExtension, 'path:', currentPath, 'isAuthenticated:', isAuthenticated);
+        console.log('ExtensionCheck: hasNostrExtension:', hasNostrExtension, 'isCheckingExtension:', isCheckingExtension, 'path:', currentPath);
 
         // Wait for extension check to complete
         if (isCheckingExtension) {
             return;
         }
 
-        // If no extension, redirect to signup
-        if (!hasNostrExtension) {
+        // If no extension and not on signup/signin pages, redirect to signup
+        if (!hasNostrExtension && currentPath !== '/signup' && currentPath !== '/signin') {
             console.log('ExtensionCheck: No extension found, redirecting to signup');
             navigate('/signup');
             return;
         }
 
-        // If extension found but not authenticated and auto-auth not attempted, try auto-authenticate
-        if (hasNostrExtension && !isAuthenticated && !autoAuthAttempted) {
-            console.log('ExtensionCheck: Extension found, attempting auto-authentication');
-            autoAuthenticate();
-            return;
-        }
-
-        console.log('ExtensionCheck: Extension found, allowing SubscriptionGuard to handle subscription checks');
-    }, [hasNostrExtension, isCheckingExtension, isAuthenticated, autoAuthAttempted, location.pathname, navigate, autoAuthenticate]);
+        console.log('ExtensionCheck: Extension check complete, allowing page to render');
+    }, [hasNostrExtension, isCheckingExtension, location.pathname, navigate]);
 
     return <>{children}</>;
 };
