@@ -5,7 +5,7 @@ set -e
 
 # Configuration
 STACK_NAME="synvya-lambda-infrastructure"
-S3_BUCKET="synvya-user-records-prod"
+S3_BUCKET="synvya-user-records-prod-v2"
 TEMPLATE_FILE="$(pwd)/aws-lambda-infrastructure.yml"
 
 echo "🚀 Deploying Synvya Lambda Infrastructure with User Records Tracking..."
