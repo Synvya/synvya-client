@@ -7,7 +7,7 @@ import PrimaryButton from '@/components/PrimaryButton';
 import Checkbox from '@/components/Checkbox';
 import NostrExtensionModal from '@/components/NostrExtensionModal';
 import { detectBrowser, getExtensionRecommendations } from '@/utils/browserDetection';
-import { getApiUrl } from '@/utils/apiConfig';
+import { getApiUrl, getApiUrlsAsync } from '@/utils/apiConfig';
 
 const SignUpPage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,7 +30,9 @@ const SignUpPage: React.FC = () => {
       }
       console.log('Checking if user exists with public key:', publicKey);
 
-      const response = await fetch(`${getApiUrl('checkUserExists')}?publicKey=${publicKey}`);
+      // Wait for API URLs to be available (especially in production)
+      const apiUrls = await getApiUrlsAsync();
+      const response = await fetch(`${apiUrls.checkUserExists}?publicKey=${publicKey}`);
       const result = await response.json();
 
       console.log('User existence check result:', result);
@@ -112,7 +114,9 @@ const SignUpPage: React.FC = () => {
 
   const recordTermsAcceptanceServerSide = async (userPublicKey: string) => {
     try {
-      const response = await fetch(getApiUrl('recordTermsAcceptance'), {
+      // Wait for API URLs to be available (especially in production)
+      const apiUrls = await getApiUrlsAsync();
+      const response = await fetch(apiUrls.recordTermsAcceptance, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
