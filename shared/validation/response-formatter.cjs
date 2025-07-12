@@ -70,9 +70,53 @@ function formatCorsResponse() {
     };
 }
 
+// Lambda-specific formatters (no CORS headers - Function URL handles CORS)
+function formatLambdaSuccessResponse(data, statusCode = 200) {
+    return {
+        statusCode,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    };
+}
+
+function formatLambdaErrorResponse(error, statusCode = 500, details = null) {
+    const responseBody = { error };
+    if (details) {
+        responseBody.details = details;
+    }
+
+    return {
+        statusCode,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(responseBody)
+    };
+}
+
+function formatLambdaValidationErrorResponse(error, validationDetails = null) {
+    const responseBody = { error };
+    if (validationDetails) {
+        responseBody.validation = validationDetails;
+    }
+
+    return {
+        statusCode: 400,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(responseBody)
+    };
+}
+
 module.exports = {
     formatSuccessResponse,
     formatErrorResponse,
     formatValidationErrorResponse,
-    formatCorsResponse
+    formatCorsResponse,
+    formatLambdaSuccessResponse,
+    formatLambdaErrorResponse,
+    formatLambdaValidationErrorResponse
 }; 

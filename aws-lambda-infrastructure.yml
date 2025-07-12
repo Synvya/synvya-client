@@ -102,6 +102,19 @@ Resources:
     Properties:
       TargetFunctionArn: !GetAtt RecordTermsAcceptanceFunction.Arn
       AuthType: NONE
+      Cors:
+        AllowCredentials: false
+        AllowHeaders:
+          - Content-Type
+        AllowMethods:
+          - POST
+          - OPTIONS
+        AllowOrigins:
+          - https://client.synvya.com
+          - https://localhost:3000
+          - http://localhost:3000
+          - http://localhost:8888
+        MaxAge: 86400
 
   RecordTermsAcceptanceUrlPermission:
     Type: AWS::Lambda::Permission
@@ -141,6 +154,19 @@ Resources:
     Properties:
       TargetFunctionArn: !GetAtt CheckUserExistsFunction.Arn
       AuthType: NONE
+      Cors:
+        AllowCredentials: false
+        AllowHeaders:
+          - Content-Type
+        AllowMethods:
+          - GET
+          - OPTIONS
+        AllowOrigins:
+          - https://client.synvya.com
+          - https://localhost:3000
+          - http://localhost:3000
+          - http://localhost:8888
+        MaxAge: 86400
 
   CheckUserExistsUrlPermission:
     Type: AWS::Lambda::Permission
@@ -208,6 +234,19 @@ Resources:
     Properties:
       TargetFunctionArn: !GetAtt HealthCheckFunction.Arn
       AuthType: NONE
+      Cors:
+        AllowCredentials: false
+        AllowHeaders:
+          - Content-Type
+        AllowMethods:
+          - GET
+          - OPTIONS
+        AllowOrigins:
+          - https://client.synvya.com
+          - https://localhost:3000
+          - http://localhost:3000
+          - http://localhost:8888
+        MaxAge: 86400
 
   HealthCheckUrlPermission:
     Type: AWS::Lambda::Permission
