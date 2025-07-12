@@ -1,6 +1,6 @@
 const { GetObjectCommand, S3Client } = require('@aws-sdk/client-s3');
-const { formatSuccessResponse, formatErrorResponse, formatValidationErrorResponse } = require('../../shared/validation/response-formatter.js');
-const { validatePublicKey } = require('../../shared/validation/request-validator.js');
+const { formatSuccessResponse, formatErrorResponse, formatValidationErrorResponse } = require('../../shared/validation/response-formatter.cjs');
+const { validatePublicKey } = require('../../shared/validation/request-validator.cjs');
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
 
@@ -32,9 +32,9 @@ const handler = async (event) => {
         console.log(`Checking if user exists: ${publicKey.substring(0, 8)}...`);
 
         // Validate public key format
-        const validation = validatePublicKey(publicKey);
-        if (!validation.isValid) {
-            return formatValidationErrorResponse(validation.error);
+        const isValidPublicKey = validatePublicKey(publicKey);
+        if (!isValidPublicKey) {
+            return formatValidationErrorResponse('Invalid public key format');
         }
 
         // Check if user record exists in S3

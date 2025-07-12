@@ -3,9 +3,9 @@
  * Stores user signup records and terms acceptance for legal compliance
  */
 
-const { validatePublicKey, validateRequiredFields } = require('../../shared/validation/request-validator.js');
-const { formatSuccessResponse, formatErrorResponse, formatValidationErrorResponse } = require('../../shared/validation/response-formatter.js');
-const { saveUserRecord } = require('../../shared/services/user-records-service.js');
+const { validatePublicKey, validateRequiredFields } = require('../../shared/validation/request-validator.cjs');
+const { formatSuccessResponse, formatErrorResponse, formatValidationErrorResponse } = require('../../shared/validation/response-formatter.cjs');
+const { saveUserRecord } = require('../../shared/services/user-records-service.cjs');
 
 const handler = async (event) => {
     console.log('Record terms acceptance function started - Lambda');
