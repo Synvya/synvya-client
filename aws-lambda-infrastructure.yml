@@ -67,6 +67,10 @@ Resources:
                   - s3:GetObject
                   - s3:PutObject
                 Resource: !Sub "arn:aws:s3:::${UserRecordsBucket}/*"
+              - Effect: Allow
+                Action: 
+                  - s3:ListBucket
+                Resource: !Sub "arn:aws:s3:::${UserRecordsBucket}"
 
 # ---------------------------------------------------------------------------
 # Lambda: record-terms-acceptance
