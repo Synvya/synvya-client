@@ -1,6 +1,6 @@
-const { formatSuccessResponse, formatErrorResponse, formatValidationErrorResponse } = require('../../shared/validation/response-formatter.cjs');
-const { validatePublicKey } = require('../../shared/validation/request-validator.cjs');
-const { getUserRecord } = require('../../shared/services/user-records-service.cjs');
+const { formatSuccessResponse, formatErrorResponse, formatValidationErrorResponse } = require('./shared/validation/response-formatter.cjs');
+const { validatePublicKey } = require('./shared/validation/request-validator.cjs');
+const { getUserRecord } = require('./shared/services/user-records-service.cjs');
 
 const handler = async (event) => {
     console.log('Check user exists function started - AWS Lambda');
