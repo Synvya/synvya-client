@@ -23,7 +23,7 @@ env:
   DISTRIBUTION_ID: E3DPPDWMXK3MAD              # ❂ CloudFront ID
   AWS_REGION: us-east-1                        # ❸ Region for S3 + CLI
   LAMBDA_STACK_NAME: synvya-lambda-infrastructure
-  LAMBDA_S3_BUCKET: synvya-user-records-prod
+  LAMBDA_S3_BUCKET: synvya-user-records-prod-v2
 
 jobs:
   deploy:

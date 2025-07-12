@@ -9,7 +9,7 @@ Description: >
 Parameters:
   S3BucketName:
     Type: String
-    Default: synvya-user-records-prod
+    Default: synvya-user-records-prod-v2
     Description: Name of the S3 bucket to create for storing user signup records
 
 # ---------------------------------------------------------------------------
