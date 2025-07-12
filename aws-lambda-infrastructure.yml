@@ -12,10 +12,6 @@ Parameters:
     Default: synvya-user-records-prod
     Description: Name of the S3 bucket to create for storing user signup records
 
-  LambdaExecutionRoleArn:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: "/synvya/lambda-execution-role-arn"
-
 # ---------------------------------------------------------------------------
 # Resources
 # ---------------------------------------------------------------------------
@@ -82,7 +78,7 @@ Resources:
       FunctionName: synvya-record-terms-acceptance
       Runtime: nodejs20.x
       Handler: index.handler
-      Role: !Ref LambdaExecutionRoleArn
+      Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         ZipFile: |
           export const handler = async (event) => {
@@ -120,7 +116,7 @@ Resources:
       FunctionName: synvya-health-check
       Runtime: nodejs20.x
       Handler: index.handler
-      Role: !Ref LambdaExecutionRoleArn
+      Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         ZipFile: |
           export const handler = async (event, context) => {
@@ -187,6 +183,12 @@ Outputs:
     Value: !Ref UserRecordsBucket
     Export:
       Name: !Sub "${AWS::StackName}-UserRecordsBucket"
+
+  LambdaExecutionRoleArn:
+    Description: ARN of the Lambda execution role
+    Value: !GetAtt LambdaExecutionRole.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-LambdaExecutionRoleArn"
 
   RecordTermsAcceptanceUrl:
     Description: URL for recording terms acceptance
