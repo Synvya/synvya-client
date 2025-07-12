@@ -14,10 +14,7 @@ echo "🚀 Deploying Synvya Lambda Infrastructure with User Records Tracking..."
 echo "📦 Building Lambda functions..."
 ./scripts/build-lambda-functions.sh
 
-# Upload Lambda function packages to S3
-echo "⬆️ Uploading Lambda functions to S3..."
-aws s3 sync build/lambda-functions/ s3://$S3_BUCKET/lambda-functions/ --delete
-
+# Deploy CloudFormation stack first (this creates the S3 bucket)
 echo "☁️ Deploying CloudFormation stack..."
 aws cloudformation deploy \
   --stack-name "$STACK_NAME" \
@@ -27,7 +24,11 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_NAMED_IAM \
   --no-fail-on-empty-changeset
 
-# Update Lambda function code directly (CloudFormation doesn't auto-update from S3)
+# Now upload Lambda function packages to S3 (bucket exists now)
+echo "⬆️ Uploading Lambda functions to S3..."
+aws s3 sync build/lambda-functions/ s3://$S3_BUCKET/lambda-functions/ --delete
+
+# Update Lambda function code (CloudFormation created functions with placeholder code)
 echo "🔄 Updating Lambda function code..."
 LAMBDA_FUNCTIONS=(
     "synvya-record-terms-acceptance"
