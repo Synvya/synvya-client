@@ -32,6 +32,7 @@ aws s3 sync build/lambda-functions/ s3://$S3_BUCKET/lambda-functions/ --delete
 echo "🔄 Updating Lambda function code..."
 LAMBDA_FUNCTIONS=(
     "synvya-record-terms-acceptance"
+    "synvya-check-user-exists"
 )
 
 for func in "${LAMBDA_FUNCTIONS[@]}"; do

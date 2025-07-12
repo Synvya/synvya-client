@@ -108,6 +108,45 @@ Resources:
       FunctionUrlAuthType: NONE
 
 # ---------------------------------------------------------------------------
+# Lambda: check-user-exists
+# ---------------------------------------------------------------------------
+  CheckUserExistsFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: UserRecordsBucket
+    Properties:
+      FunctionName: synvya-check-user-exists
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          export const handler = async (event) => {
+              return {
+                  statusCode: 200,
+                  headers: { 'Access-Control-Allow-Origin': '*' },
+                  body: JSON.stringify({ message: 'Function will be updated with proper code' })
+              };
+          };
+      Environment:
+        Variables:
+          USER_RECORDS_BUCKET: !Ref UserRecordsBucket
+      Timeout: 30
+
+  CheckUserExistsUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt CheckUserExistsFunction.Arn
+      AuthType: NONE
+
+  CheckUserExistsUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CheckUserExistsFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
+      FunctionUrlAuthType: NONE
+
+# ---------------------------------------------------------------------------
 # Lambda: health-check
 # ---------------------------------------------------------------------------
   HealthCheckFunction:
@@ -195,6 +234,12 @@ Outputs:
     Value: !GetAtt RecordTermsAcceptanceUrl.FunctionUrl
     Export:
       Name: !Sub "${AWS::StackName}-RecordTermsAcceptanceUrl"
+
+  CheckUserExistsUrl:
+    Description: URL for checking if user exists
+    Value: !GetAtt CheckUserExistsUrl.FunctionUrl
+    Export:
+      Name: !Sub "${AWS::StackName}-CheckUserExistsUrl"
 
   HealthCheckUrl:
     Description: URL for health check endpoint
