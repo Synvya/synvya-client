@@ -3,8 +3,8 @@
  * Handles user signup and terms acceptance records with local/cloud parity
  */
 
-import fs from 'fs/promises';
-import path from 'path';
+const fs = require('fs/promises');
+const path = require('path');
 
 // Configuration for different environments
 const CONFIG = {
@@ -34,7 +34,7 @@ console.log('Environment detection:', {
  * @param {string} publicKey - User's public key
  * @returns {Object|null} User record or null if not found
  */
-export async function getUserRecord(publicKey) {
+async function getUserRecord(publicKey) {
     try {
         if (isLocal) {
             // Local development - read from JSON file
@@ -46,7 +46,7 @@ export async function getUserRecord(publicKey) {
         } else {
             // Cloud environment - read from S3
             console.log('Using cloud S3 storage');
-            const { S3Client, GetObjectCommand } = await import('@aws-sdk/client-s3');
+            const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
             const s3Client = new S3Client({ region: 'us-east-1' });
 
             const command = new GetObjectCommand({
@@ -76,7 +76,7 @@ export async function getUserRecord(publicKey) {
  * @param {string} publicKey - User's public key
  * @param {Object} recordData - User record data
  */
-export async function saveUserRecord(publicKey, recordData) {
+async function saveUserRecord(publicKey, recordData) {
     try {
         if (isLocal) {
             // Local development - read, update, write JSON file
@@ -107,7 +107,7 @@ export async function saveUserRecord(publicKey, recordData) {
         } else {
             // Cloud environment - read from S3, update, write back
             console.log('Saving to cloud S3 storage');
-            const { S3Client, GetObjectCommand, PutObjectCommand } = await import('@aws-sdk/client-s3');
+            const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
             const s3Client = new S3Client({ region: 'us-east-1' });
 
             let records = { users: {}, metadata: { version: '1.0', created: new Date().toISOString(), description: 'User signup and terms acceptance records for legal compliance', totalUsers: 0 } };
@@ -149,4 +149,9 @@ export async function saveUserRecord(publicKey, recordData) {
         console.error('Error saving user record:', error);
         throw error;
     }
-} 
+}
+
+module.exports = {
+    getUserRecord,
+    saveUserRecord
+}; 

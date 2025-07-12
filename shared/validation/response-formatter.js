@@ -3,7 +3,7 @@
  * Provides consistent response formatting across functions
  */
 
-import { CORS_HEADERS } from '../utils/constants.js';
+const { CORS_HEADERS } = require('../utils/constants.js');
 
 /**
  * Format success response
@@ -11,7 +11,7 @@ import { CORS_HEADERS } from '../utils/constants.js';
  * @param {number} statusCode - HTTP status code (default: 200)
  * @returns {Object} Formatted response
  */
-export function formatSuccessResponse(data, statusCode = 200) {
+function formatSuccessResponse(data, statusCode = 200) {
     return {
         statusCode,
         headers: CORS_HEADERS,
@@ -26,7 +26,7 @@ export function formatSuccessResponse(data, statusCode = 200) {
  * @param {string} details - Additional error details
  * @returns {Object} Formatted response
  */
-export function formatErrorResponse(error, statusCode = 500, details = null) {
+function formatErrorResponse(error, statusCode = 500, details = null) {
     const responseBody = { error };
     if (details) {
         responseBody.details = details;
@@ -45,7 +45,7 @@ export function formatErrorResponse(error, statusCode = 500, details = null) {
  * @param {Object} validationDetails - Details about validation failures
  * @returns {Object} Formatted response
  */
-export function formatValidationErrorResponse(error, validationDetails = null) {
+function formatValidationErrorResponse(error, validationDetails = null) {
     const responseBody = { error };
     if (validationDetails) {
         responseBody.validation = validationDetails;
@@ -62,10 +62,17 @@ export function formatValidationErrorResponse(error, validationDetails = null) {
  * Format CORS preflight response
  * @returns {Object} Formatted CORS response
  */
-export function formatCorsResponse() {
+function formatCorsResponse() {
     return {
         statusCode: 200,
         headers: CORS_HEADERS,
         body: ''
     };
-} 
+}
+
+module.exports = {
+    formatSuccessResponse,
+    formatErrorResponse,
+    formatValidationErrorResponse,
+    formatCorsResponse
+}; 

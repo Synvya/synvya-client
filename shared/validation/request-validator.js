@@ -8,7 +8,7 @@
  * @param {string} publicKey - Public key to validate
  * @returns {boolean} True if valid
  */
-export function validatePublicKey(publicKey) {
+function validatePublicKey(publicKey) {
     if (!publicKey || typeof publicKey !== 'string') {
         return false;
     }
@@ -21,7 +21,7 @@ export function validatePublicKey(publicKey) {
  * @param {string} email - Email to validate
  * @returns {boolean} True if valid
  */
-export function validateEmail(email) {
+function validateEmail(email) {
     if (!email || typeof email !== 'string') {
         return false;
     }
@@ -35,7 +35,7 @@ export function validateEmail(email) {
  * @param {string[]} requiredFields - Array of required field names
  * @returns {Object} Validation result
  */
-export function validateRequiredFields(body, requiredFields) {
+function validateRequiredFields(body, requiredFields) {
     const missing = [];
 
     for (const field of requiredFields) {
@@ -48,4 +48,10 @@ export function validateRequiredFields(body, requiredFields) {
         isValid: missing.length === 0,
         missing
     };
-} 
+}
+
+module.exports = {
+    validatePublicKey,
+    validateEmail,
+    validateRequiredFields
+}; 

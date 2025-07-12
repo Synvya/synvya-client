@@ -2,7 +2,6 @@
     "name": "synvya-record-terms-acceptance",
     "version": "1.0.0",
     "description": "Record user terms acceptance for legal compliance",
-    "type": "module",
     "main": "index.js",
     "scripts": {
         "test": "echo \"No tests yet\" && exit 0"

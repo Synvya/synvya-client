@@ -1,10 +1,10 @@
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { formatSuccessResponse, formatErrorResponse, formatValidationErrorResponse } from '../../shared/validation/response-formatter.js';
-import { validatePublicKey } from '../../shared/validation/request-validator.js';
+const { GetObjectCommand, S3Client } = require('@aws-sdk/client-s3');
+const { formatSuccessResponse, formatErrorResponse, formatValidationErrorResponse } = require('../../shared/validation/response-formatter.js');
+const { validatePublicKey } = require('../../shared/validation/request-validator.js');
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
 
-export const handler = async (event) => {
+const handler = async (event) => {
     console.log('Check user exists function started - AWS Lambda');
 
     // Handle CORS preflight requests
@@ -61,4 +61,6 @@ export const handler = async (event) => {
         console.error('Error checking user existence:', error);
         return formatErrorResponse('Failed to check user existence');
     }
-}; 
+};
+
+module.exports = { handler }; 
