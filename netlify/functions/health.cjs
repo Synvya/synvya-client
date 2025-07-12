@@ -4,7 +4,7 @@
  * Maintains local/cloud development parity structure
  */
 
-export const handler = async (event, context) => {
+const handler = async (event, context) => {
     // Handle CORS preflight
     if (event.httpMethod === 'OPTIONS') {
         return {
@@ -57,4 +57,6 @@ export const handler = async (event, context) => {
             })
         };
     }
-}; 
+};
+
+module.exports = { handler }; 

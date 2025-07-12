@@ -107,22 +107,17 @@ export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [state, dispatch] = useReducer(nostrAuthReducer, initialState);
 
   const checkNostrExtension = React.useCallback(() => {
-    // Only check once per session
-    if (state.extensionChecked) {
-      console.log('Extension already checked this session:', state.hasNostrExtension);
-      return state.hasNostrExtension;
-    }
-
+    console.log('ExtensionCheck: Checking for extension (first time)');
     dispatch({ type: 'SET_CHECKING_EXTENSION', payload: true });
 
     // Check immediately
     const hasExtension = typeof window !== 'undefined' && 'nostr' in window;
     dispatch({ type: 'SET_EXTENSION_STATUS', payload: hasExtension });
-    dispatch({ type: 'SET_EXTENSION_CHECKED', payload: true });
     console.log('Nostr extension check (first time):', hasExtension);
 
     // If not found, wait a bit and check again (extensions load async)
     if (!hasExtension) {
+      console.log('ExtensionCheck: hasNostrExtension:', false, 'isCheckingExtension:', true, 'path:', window.location.pathname);
       setTimeout(() => {
         const hasExtensionDelayed = typeof window !== 'undefined' && 'nostr' in window;
         dispatch({ type: 'SET_EXTENSION_STATUS', payload: hasExtensionDelayed });
@@ -130,11 +125,14 @@ export const NostrAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         console.log('Nostr extension check (delayed):', hasExtensionDelayed);
       }, 2000);
     } else {
+      console.log('ExtensionCheck: hasNostrExtension:', true, 'isCheckingExtension:', false, 'path:', window.location.pathname);
       dispatch({ type: 'SET_CHECKING_EXTENSION', payload: false });
     }
 
+    // Always mark as checked to prevent the delayed timeout from running multiple times
+    dispatch({ type: 'SET_EXTENSION_CHECKED', payload: true });
     return hasExtension;
-  }, [state.extensionChecked, state.hasNostrExtension]);
+  }, []); // Remove dependencies to allow fresh checking
 
   // Initialize nostr service on mount
   useEffect(() => {

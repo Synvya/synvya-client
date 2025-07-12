@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useNostrAuth } from '@/contexts/NostrAuthContext';
 import Logo from '@/components/Logo';
@@ -19,41 +19,7 @@ const SignUpPage: React.FC = () => {
   const [checkingExistingUser, setCheckingExistingUser] = useState(false);
   const [isExistingUser, setIsExistingUser] = useState<boolean | null>(null);
 
-  // Check for extension on component mount and periodically until found
-  useEffect(() => {
-    checkNostrExtension();
-
-    // Only set up interval if extension is not found
-    if (!hasNostrExtension) {
-      const interval = setInterval(() => {
-        const found = checkNostrExtension();
-        if (found) {
-          clearInterval(interval);
-        }
-      }, 1000); // Check every second until found
-
-      return () => clearInterval(interval);
-    }
-  }, [checkNostrExtension, hasNostrExtension]);
-
-  // Check if user already exists when extension is available
-  useEffect(() => {
-    if (hasNostrExtension && isExistingUser === null) {
-      checkIfUserExists();
-    }
-  }, [hasNostrExtension, isExistingUser]);
-
-  // Redirect existing users to sign in
-  useEffect(() => {
-    if (isExistingUser === true) {
-      const timer = setTimeout(() => {
-        navigate('/signin');
-      }, 2000); // Give them time to read the message
-      return () => clearTimeout(timer);
-    }
-  }, [isExistingUser, navigate]);
-
-  const checkIfUserExists = async () => {
+  const checkIfUserExists = useCallback(async () => {
     try {
       setCheckingExistingUser(true);
 
@@ -77,7 +43,44 @@ const SignUpPage: React.FC = () => {
     } finally {
       setCheckingExistingUser(false);
     }
-  };
+  }, []);
+
+  // Check for extension on component mount and periodically until found
+  useEffect(() => {
+    // Initial check
+    checkNostrExtension();
+
+    // Only set up interval if extension is not found
+    if (!hasNostrExtension) {
+      const interval = setInterval(() => {
+        // Force a fresh check by directly checking window.nostr
+        const hasExtension = typeof window !== 'undefined' && 'nostr' in window;
+        if (hasExtension) {
+          checkNostrExtension(); // Update the context
+          clearInterval(interval);
+        }
+      }, 1000); // Check every second until found
+
+      return () => clearInterval(interval);
+    }
+  }, [hasNostrExtension]); // Remove checkNostrExtension from deps to prevent recreation loop
+
+  // Check if user already exists when extension is available
+  useEffect(() => {
+    if (hasNostrExtension && isExistingUser === null && !checkingExistingUser) {
+      checkIfUserExists();
+    }
+  }, [hasNostrExtension, isExistingUser, checkingExistingUser, checkIfUserExists]);
+
+  // Redirect existing users to sign in
+  useEffect(() => {
+    if (isExistingUser === true) {
+      const timer = setTimeout(() => {
+        navigate('/signin');
+      }, 2000); // Give them time to read the message
+      return () => clearTimeout(timer);
+    }
+  }, [isExistingUser, navigate]);
 
   const canSignUp = hasNostrExtension && termsAgreed && isExistingUser === false;
 

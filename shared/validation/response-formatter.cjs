@@ -3,7 +3,7 @@
  * Provides consistent response formatting across functions
  */
 
-const { CORS_HEADERS } = require('../utils/constants.js');
+const { CORS_HEADERS } = require('../utils/constants.cjs');
 
 /**
  * Format success response

@@ -3,11 +3,11 @@
  * Stores user signup records and terms acceptance for legal compliance
  */
 
-import { validatePublicKey, validateRequiredFields } from '../../shared/validation/request-validator.js';
-import { formatSuccessResponse, formatErrorResponse, formatValidationErrorResponse } from '../../shared/validation/response-formatter.js';
-import { saveUserRecord } from '../../shared/services/user-records-service.js';
+const { validatePublicKey, validateRequiredFields } = require('../../shared/validation/request-validator.cjs');
+const { formatSuccessResponse, formatErrorResponse, formatValidationErrorResponse } = require('../../shared/validation/response-formatter.cjs');
+const { saveUserRecord } = require('../../shared/services/user-records-service.cjs');
 
-export const handler = async (event, context) => {
+const handler = async (event, context) => {
     console.log('Record terms acceptance function started - Netlify');
 
     try {
@@ -65,4 +65,6 @@ export const handler = async (event, context) => {
         console.error('Error recording terms acceptance:', error);
         return formatErrorResponse('Internal server error', 500);
     }
-}; 
+};
+
+module.exports = { handler }; 

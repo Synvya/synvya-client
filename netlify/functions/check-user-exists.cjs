@@ -3,11 +3,11 @@
  * Used to determine if user should sign up or sign in
  */
 
-import { validatePublicKey } from '../../shared/validation/request-validator.js';
-import { formatSuccessResponse, formatErrorResponse } from '../../shared/validation/response-formatter.js';
-import { getUserRecord } from '../../shared/services/user-records-service.js';
+const { validatePublicKey } = require('../../shared/validation/request-validator.cjs');
+const { formatSuccessResponse, formatErrorResponse } = require('../../shared/validation/response-formatter.cjs');
+const { getUserRecord } = require('../../shared/services/user-records-service.cjs');
 
-export const handler = async (event, context) => {
+const handler = async (event, context) => {
     console.log('Check user exists function started - Netlify');
 
     try {
@@ -49,4 +49,6 @@ export const handler = async (event, context) => {
         console.error('Error checking user exists:', error);
         return formatErrorResponse('Internal server error', 500);
     }
-}; 
+};
+
+module.exports = { handler }; 
