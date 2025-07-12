@@ -12,7 +12,7 @@ const CONFIG = {
         recordsPath: path.join(process.cwd(), 'netlify', 'functions', 'data', 'user-records.json')
     },
     cloud: {
-        bucketName: 'synvya-user-records-prod',
+        bucketName: process.env.USER_RECORDS_BUCKET || 'synvya-user-records-prod-v2',
         recordsKey: 'user-records.json'
     }
 };

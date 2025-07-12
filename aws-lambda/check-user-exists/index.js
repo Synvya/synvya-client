@@ -1,8 +1,6 @@
-const { GetObjectCommand, S3Client } = require('@aws-sdk/client-s3');
 const { formatSuccessResponse, formatErrorResponse, formatValidationErrorResponse } = require('../../shared/validation/response-formatter.cjs');
 const { validatePublicKey } = require('../../shared/validation/request-validator.cjs');
-
-const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
+const { getUserRecord } = require('../../shared/services/user-records-service.cjs');
 
 const handler = async (event) => {
     console.log('Check user exists function started - AWS Lambda');
@@ -37,25 +35,12 @@ const handler = async (event) => {
             return formatValidationErrorResponse('Invalid public key format');
         }
 
-        // Check if user record exists in S3
-        const bucketName = process.env.USER_RECORDS_BUCKET;
-        const key = `users/${publicKey}.json`;
+        // Check if user record exists using the shared service
+        const userRecord = await getUserRecord(publicKey);
+        const userExists = userRecord !== null;
 
-        try {
-            await s3Client.send(new GetObjectCommand({
-                Bucket: bucketName,
-                Key: key
-            }));
-
-            console.log(`User exists: true`);
-            return formatSuccessResponse({ exists: true });
-        } catch (error) {
-            if (error.name === 'NoSuchKey') {
-                console.log(`User exists: false`);
-                return formatSuccessResponse({ exists: false });
-            }
-            throw error; // Re-throw other S3 errors
-        }
+        console.log(`User exists: ${userExists}`);
+        return formatSuccessResponse({ exists: userExists });
 
     } catch (error) {
         console.error('Error checking user existence:', error);
