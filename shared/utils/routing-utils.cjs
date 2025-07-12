@@ -6,7 +6,7 @@
 /**
  * Application routes constants
  */
-export const ROUTES = {
+const ROUTES = {
     SIGNUP: '/signup',
     SIGNIN: '/signin',
     FORM: '/form',
@@ -17,8 +17,13 @@ export const ROUTES = {
 /**
  * Routes that require authentication
  */
-export const PROTECTED_ROUTES = [
+const PROTECTED_ROUTES = [
     ROUTES.FORM,
     ROUTES.ORDERS,
     ROUTES.VISUALIZATION
-]; 
+];
+
+module.exports = {
+    ROUTES,
+    PROTECTED_ROUTES
+}; 

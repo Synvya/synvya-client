@@ -63,7 +63,7 @@ const SignUpPage: React.FC = () => {
 
       return () => clearInterval(interval);
     }
-  }, [hasNostrExtension]); // Remove checkNostrExtension from deps to prevent recreation loop
+  }, [hasNostrExtension, checkNostrExtension]);
 
   // Check if user already exists when extension is available
   useEffect(() => {
