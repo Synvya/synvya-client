@@ -11,8 +11,9 @@ const handler = async (event) => {
     console.log('Record terms acceptance function started - Lambda');
 
     try {
-        // Only allow POST requests
-        if (event.httpMethod !== 'POST') {
+        // Only allow POST requests (Lambda Function URL format)
+        const httpMethod = event.requestContext?.http?.method || event.httpMethod;
+        if (httpMethod !== 'POST') {
             return formatLambdaErrorResponse('Method not allowed', 405);
         }
 
